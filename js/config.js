@@ -22,3 +22,20 @@ const BACKENDLESS_CONFIG = {
 /* Formulario de contacto */
 window.FORMSPREE_ENDPOINT =
     "https://formspree.io/f/xqpzyrde";
+
+/*
+   Avisos de pedidos.
+   Por ahora reutiliza el mismo endpoint de Formspree.
+   Si después creas un formulario exclusivo para pedidos,
+   solo cambia esta URL.
+*/
+window.FORMSPREE_ORDERS_ENDPOINT =
+    "https://formspree.io/f/xqpzyrde";
+
+/*
+   Cargamos el módulo de avisos antes de app.js para que
+   pueda escuchar los pedidos guardados en Backendless.
+*/
+document.write(
+    '<script src="js/order-notifications.js"><\/script>'
+);
