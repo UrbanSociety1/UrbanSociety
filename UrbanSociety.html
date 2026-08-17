@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Urban Society | Sneakers & Streetwear
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="css/style.css"
+    >
+
+</head>
+
+
+<body>
+
+
+<!-- ==================================================
+     HEADER
+================================================== -->
+
+<header class="site-header">
+
+    <div
+        class="topbar"
+        style="
+            min-height:110px;
+            padding:10px 5%;
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:20px;
+        "
+    >
+
+        <!-- LOGO -->
+
+        <a
+            href="#inicio"
+            class="logo"
+        >
+
+            <img
+                src="images/Logo Urban.png"
+                alt="Urban Society"
+            >
+
+            <div class="logo-text">
+
+                <strong>
+                    URBAN
+                </strong>
+
+                <span>
+                    SOCIETY
+                </span>
+
+            </div>
+
+        </a>
+
+
+        <!-- NAV -->
+
+        <nav
+            style="
+                display:flex;
+                align-items:center;
+                gap:35px;
+            "
+        >
+
+            <a href="#inicio">
+                Inicio
+            </a>
+
+            <a href="#productos">
+                Productos
+            </a>
+
+            <a href="#ofertas">
+                Ofertas
+            </a>
+
+            <a href="#contacto">
+                Contacto
+            </a>
+
+        </nav>
+
+
+        <!-- USUARIO + CARRITO -->
+
+        <div
+            style="
+                display:flex;
+                align-items:center;
+                gap:12px;
+            "
+        >
+
+            <div id="user-area">
+
+                <button
+                    type="button"
+                    onclick="mostrarLogin()"
+                    class="account-button"
+                >
+                    👤 Cuenta
+                </button>
+
+            </div>
+
+
+            <button
+                type="button"
+                id="cart-button"
+                class="cart-button"
+                aria-label="Carrito"
+            >
+
+                🛒
+
+                <span
+                    id="cart-count"
+                    class="cart-count"
+                >
+                    0
+                </span>
+
+            </button>
+
+        </div>
+
+    </div>
+
+</header>
+
+
+
+<!-- ==================================================
+     LOGIN
+================================================== -->
+
+<section
+    id="login-screen"
+    class="auth-container"
+    style="display:none;"
+>
+
+    <div class="auth-box">
+
+        <h1>
+            INICIAR
+            <span>SESIÓN</span>
+        </h1>
+
+        <p style="color:#aaa;margin-bottom:25px;">
+            Entra a tu cuenta de Urban Society.
+        </p>
+
+
+        <form id="login-form">
+
+            <div style="margin-bottom:15px;">
+
+                <label for="login-email">
+                    Correo electrónico
+                </label>
+
+                <input
+                    id="login-email"
+                    type="email"
+                    autocomplete="email"
+                    placeholder="correo@ejemplo.com"
+                    required
+                >
+
+            </div>
+
+
+            <div style="margin-bottom:20px;">
+
+                <label for="login-password">
+                    Contraseña
+                </label>
+
+                <input
+                    id="login-password"
+                    type="password"
+                    autocomplete="current-password"
+                    placeholder="••••••••"
+                    required
+                >
+
+            </div>
+
+
+            <button
+                type="submit"
+                style="width:100%;"
+            >
+                INICIAR SESIÓN
+            </button>
+
+        </form>
+
+
+        <p
+            id="auth-status"
+            style="
+                color:#ff0015;
+                margin-top:15px;
+                min-height:20px;
+            "
+        ></p>
+
+
+        <div
+            style="
+                margin-top:20px;
+                text-align:center;
+            "
+        >
+
+            <span style="color:#999;">
+                ¿No tienes cuenta?
+            </span>
+
+            <button
+                type="button"
+                onclick="mostrarRegistro()"
+                class="btn-secondary"
+                style="margin-top:10px;"
+            >
+                CREAR CUENTA
+            </button>
+
+        </div>
+
+
+        <button
+            type="button"
+            onclick="mostrarTienda()"
+            class="btn-secondary"
+            style="
+                width:100%;
+                margin-top:15px;
+            "
+        >
+            ← VOLVER A LA TIENDA
+        </button>
+
+    </div>
+
+</section>
+
+
+
+<!-- ==================================================
+     REGISTRO
+================================================== -->
+
+<section
+    id="register-screen"
+    class="auth-container"
+    style="display:none;"
+>
+
+    <div class="auth-box">
+
+        <h1>
+            CREAR
+            <span>CUENTA</span>
+        </h1>
+
+        <p style="color:#aaa;margin-bottom:25px;">
+            Crea tu cuenta para comprar en Urban Society.
+        </p>
+
+
+        <form id="register-form">
+
+            <div style="margin-bottom:15px;">
+
+                <label for="register-name">
+                    Nombre
+                </label>
+
+                <input
+                    id="register-name"
+                    type="text"
+                    autocomplete="name"
+                    placeholder="Tu nombre"
+                    required
+                >
+
+            </div>
+
+
+            <div style="margin-bottom:15px;">
+
+                <label for="register-email">
+                    Correo electrónico
+                </label>
+
+                <input
+                    id="register-email"
+                    type="email"
+                    autocomplete="email"
+                    placeholder="correo@ejemplo.com"
+                    required
+                >
+
+            </div>
+
+
+            <div style="margin-bottom:15px;">
+
+                <label for="register-password">
+                    Contraseña
+                </label>
+
+                <input
+                    id="register-password"
+                    type="password"
+                    autocomplete="new-password"
+                    placeholder="Mínimo 6 caracteres"
+                    minlength="6"
+                    required
+                >
+
+            </div>
+
+
+            <div style="margin-bottom:20px;">
+
+                <label for="register-password-confirm">
+                    Confirmar contraseña
+                </label>
+
+                <input
+                    id="register-password-confirm"
+                    type="password"
+                    autocomplete="new-password"
+                    placeholder="Repite tu contraseña"
+                    minlength="6"
+                    required
+                >
+
+            </div>
+
+
+            <button
+                type="submit"
+                style="width:100%;"
+            >
+                CREAR CUENTA
+            </button>
+
+        </form>
+
+
+        <button
+            type="button"
+            onclick="mostrarLogin()"
+            class="btn-secondary"
+            style="
+                width:100%;
+                margin-top:15px;
+            "
+        >
+            YA TENGO CUENTA
+        </button>
+
+
+        <button
+            type="button"
+            onclick="mostrarTienda()"
+            class="btn-secondary"
+            style="
+                width:100%;
+                margin-top:10px;
+            "
+        >
+            ← VOLVER A LA TIENDA
+        </button>
+
+    </div>
+
+</section>
+
+
+
+<!-- ==================================================
+     CONTENIDO DE LA TIENDA
+================================================== -->
+
+<main id="store-content">
+
+
+<!-- ==================================================
+     HERO
+================================================== -->
+
+<section
+    id="inicio"
+    class="hero"
+>
+
+    <div
+        class="hero-content"
+        style="
+            width:100%;
+            max-width:1250px;
+            margin:auto;
+            padding:80px 5%;
+        "
+    >
+
+        <div
+            class="hero-subtitle"
+            style="margin-bottom:20px;"
+        >
+            NUEVA COLECCIÓN 2026
+        </div>
+
+
+        <h1>
+
+            TU ESTILO.
+
+            <br>
+
+            <span>
+                TUS TENIS.
+            </span>
+
+        </h1>
+
+
+        <p
+            style="
+                max-width:650px;
+                margin-top:30px;
+                margin-bottom:30px;
+            "
+        >
+            Descubre sneakers, ropa y accesorios
+            seleccionados para llevar tu estilo
+            al siguiente nivel.
+        </p>
+
+
+        <div
+            style="
+                display:flex;
+                gap:15px;
+                flex-wrap:wrap;
+            "
+        >
+
+            <a
+                href="#productos"
+                class="btn"
+            >
+                COMPRAR AHORA
+            </a>
+
+
+            <a
+                href="#ofertas"
+                class="btn btn-secondary"
+            >
+                VER OFERTAS
+            </a>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<!-- ==================================================
+     PRODUCTOS
+================================================== -->
+
+<section
+    id="productos"
+    style="
+        padding:80px 5%;
+        max-width:1250px;
+        margin:auto;
+    "
+>
+
+    <div
+        style="
+            display:flex;
+            justify-content:space-between;
+            align-items:end;
+            gap:20px;
+            margin-bottom:35px;
+            flex-wrap:wrap;
+        "
+    >
+
+        <div>
+
+            <p
+                class="hero-subtitle"
+                style="margin-bottom:10px;"
+            >
+                URBAN SOCIETY
+            </p>
+
+            <h2 class="section-title">
+                PRODUCTOS
+                <span>DESTACADOS</span>
+            </h2>
+
+        </div>
+
+    </div>
+
+
+    <!--
+
+        app.js puede cargar aquí
+        los productos de Backendless.
+
+    -->
+
+    <div
+        id="products-container"
+        class="product-grid"
+    >
+
+        <div
+            class="product-card"
+            style="padding:30px;text-align:center;"
+        >
+
+            <p style="color:#aaa;">
+                Cargando productos...
+            </p>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<!-- ==================================================
+     OFERTAS
+================================================== -->
+
+<section
+    id="ofertas"
+    style="
+        padding:80px 5%;
+        background:
+            linear-gradient(
+                135deg,
+                #130000,
+                #080808
+            );
+        border-top:1px solid rgba(255,0,21,.12);
+        border-bottom:1px solid rgba(255,0,21,.12);
+    "
+>
+
+    <div
+        style="
+            max-width:1250px;
+            margin:auto;
+        "
+    >
+
+        <p class="hero-subtitle">
+            OFERTAS
+        </p>
+
+        <h2 class="section-title">
+            STREET
+            <span>DEALS</span>
+        </h2>
+
+
+        <div
+            id="offers-container"
+            class="product-grid"
+            style="margin-top:35px;"
+        >
+
+            <div
+                class="product-card"
+                style="padding:30px;"
+            >
+
+                <h3>
+                    PRÓXIMAMENTE
+                </h3>
+
+                <p style="margin-top:10px;">
+                    Nuevas ofertas próximamente.
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<!-- ==================================================
+     CONTACTO
+================================================== -->
+
+<section
+    id="contacto"
+    style="
+        padding:80px 5%;
+        max-width:900px;
+        margin:auto;
+    "
+>
+
+    <p class="hero-subtitle">
+        CONTACTO
+    </p>
+
+    <h2 class="section-title">
+        HABLA
+        <span>CON NOSOTROS</span>
+    </h2>
+
+
+    <div
+        class="card"
+        style="
+            padding:30px;
+            margin-top:30px;
+        "
+    >
+
+        <p
+            style="
+                color:#bbb;
+                line-height:1.7;
+            "
+        >
+            ¿Tienes alguna pregunta sobre un producto,
+            pedido o disponibilidad?
+        </p>
+
+
+        <div
+            style="
+                margin-top:25px;
+                display:flex;
+                gap:15px;
+                flex-wrap:wrap;
+            "
+        >
+
+            <a
+                href="mailto:contacto@urbansociety.com"
+                class="btn"
+            >
+                ✉ CONTACTAR
+            </a>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+</main>
+
+
+
+<!-- ==================================================
+     CARRITO
+================================================== -->
+
+<div
+    id="cart-panel"
+    style="
+        display:none;
+        position:fixed;
+        right:20px;
+        top:100px;
+        width:min(420px,calc(100% - 40px));
+        max-height:75vh;
+        overflow:auto;
+        z-index:9999;
+        background:#0c0c0c;
+        border:1px solid rgba(255,0,21,.35);
+        border-radius:16px;
+        padding:25px;
+        box-shadow:0 20px 70px rgba(0,0,0,.7);
+    "
+>
+
+    <div
+        style="
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            margin-bottom:20px;
+        "
+    >
+
+        <h2>
+            TU
+            <span style="color:#ff0015;">
+                CARRITO
+            </span>
+        </h2>
+
+
+        <button
+            type="button"
+            id="close-cart"
+            class="btn-secondary"
+        >
+            ✕
+        </button>
+
+    </div>
+
+
+    <div id="cart-items">
+
+        <p style="color:#999;">
+            Tu carrito está vacío.
+        </p>
+
+    </div>
+
+
+    <div
+        style="
+            border-top:1px solid #222;
+            margin-top:20px;
+            padding-top:20px;
+        "
+    >
+
+        <strong>
+            Total:
+        </strong>
+
+        <strong
+            id="cart-total"
+            style="
+                float:right;
+                color:#ff0015;
+            "
+        >
+            $0.00
+        </strong>
+
+    </div>
+
+
+    <button
+        id="checkout-button"
+        type="button"
+        style="
+            width:100%;
+            margin-top:20px;
+        "
+    >
+        PROCEDER AL PAGO
+    </button>
+
+</div>
+
+
+
+<!-- ==================================================
+     FOOTER
+================================================== -->
+
+<footer
+    style="
+        padding:45px 5%;
+        text-align:center;
+    "
+>
+
+    <strong>
+        URBAN SOCIETY
+    </strong>
+
+    <p style="margin-top:10px;">
+        Sneakers · Streetwear · Cultura
+    </p>
+
+    <p
+        style="
+            margin-top:15px;
+            font-size:13px;
+        "
+    >
+        © 2026 Urban Society.
+        Todos los derechos reservados.
+    </p>
+
+</footer>
+
+
+
+<!-- ==================================================
+     BACKENDLESS
+================================================== -->
+
+<script
+    src="https://cdn.jsdelivr.net/npm/backendless@7.0.2/dist/backendless.min.js"
+></script>
+
+
+<!-- CONFIGURACIÓN -->
+
+<script
+    src="js/config.js"
+></script>
+
+
+<!-- BACKENDLESS -->
+
+<script
+    src="js/backendless.js"
+></script>
+
+
+<!-- AUTENTICACIÓN -->
+
+<script
+    src="js/auth.js"
+></script>
+
+
+<!-- APP -->
+
+<script
+    src="js/app.js"
+></script>
+
+
+<!-- CARRITO -->
+
+<script>
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+        const cartButton =
+            document.getElementById(
+                "cart-button"
+            );
+
+
+        const cartPanel =
+            document.getElementById(
+                "cart-panel"
+            );
+
+
+        const closeCart =
+            document.getElementById(
+                "close-cart"
+            );
+
+
+        if (
+            cartButton &&
+            cartPanel
+        ) {
+
+            cartButton.addEventListener(
+                "click",
+                function () {
+
+                    cartPanel.style.display =
+                        cartPanel.style.display ===
+                        "none"
+                            ? "block"
+                            : "none";
+
+                }
+            );
+
+        }
+
+
+        if (closeCart) {
+
+            closeCart.addEventListener(
+                "click",
+                function () {
+
+                    cartPanel.style.display =
+                        "none";
+
+                }
+            );
+
+        }
+
+    }
+);
+
+</script>
+
+
+</body>
+
+</html>
