@@ -7,12 +7,16 @@
 let backendlessReady = false;
 
 function cargarEstilosMejorados() {
-  if (document.querySelector('link[href="css/upgrade.css"]')) return;
+  const estilos = ["css/upgrade.css", "css/contact-form.css"];
 
-  const link = document.createElement("link");
-  link.rel = "stylesheet";
-  link.href = "css/upgrade.css";
-  document.head.appendChild(link);
+  estilos.forEach(href => {
+    if (document.querySelector(`link[href="${href}"]`)) return;
+
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = href;
+    document.head.appendChild(link);
+  });
 }
 
 function iniciarBackendless() {
@@ -114,6 +118,122 @@ function actualizarCategoriasUI() {
   if (categorias.includes(actual)) select.value = actual;
 }
 
+function crearFormularioContacto() {
+  const seccion = document.getElementById("contacto");
+  if (!seccion || seccion.querySelector("#contact-form")) return;
+
+  const tarjeta = seccion.querySelector(".contact-card");
+  if (!tarjeta) return;
+
+  tarjeta.innerHTML = `
+    <div class="contact-copy">
+      <p class="eyebrow">MENSAJE DIRECTO</p>
+      <h3>¿Tienes una pregunta?</h3>
+      <p class="muted">Escríbenos sobre disponibilidad, productos o pedidos.</p>
+    </div>
+
+    <form id="contact-form" class="contact-form" novalidate>
+      <div class="contact-field">
+        <label for="contact-name">Nombre</label>
+        <input id="contact-name" name="name" type="text" autocomplete="name" maxlength="100" required>
+      </div>
+
+      <div class="contact-field">
+        <label for="contact-email">Correo</label>
+        <input id="contact-email" name="email" type="email" autocomplete="email" required>
+      </div>
+
+      <div class="contact-field full">
+        <label for="contact-phone">WhatsApp / teléfono</label>
+        <input id="contact-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" maxlength="25">
+      </div>
+
+      <div class="contact-field full">
+        <label for="contact-message">Mensaje</label>
+        <textarea id="contact-message" name="message" rows="5" maxlength="1200" required></textarea>
+      </div>
+
+      <input type="text" name="_gotcha" class="contact-honeypot" tabindex="-1" autocomplete="off">
+
+      <button id="contact-submit" type="submit" class="btn btn-primary full contact-submit">
+        ENVIAR MENSAJE
+      </button>
+
+      <p id="contact-status" class="contact-status" aria-live="polite"></p>
+    </form>
+  `;
+
+  const form = document.getElementById("contact-form");
+  if (form) form.addEventListener("submit", enviarFormularioContacto);
+}
+
+async function enviarFormularioContacto(event) {
+  event.preventDefault();
+
+  const form = event.currentTarget;
+  const status = document.getElementById("contact-status");
+  const button = document.getElementById("contact-submit");
+  const endpoint = String(window.FORMSPREE_ENDPOINT || "").trim();
+
+  if (!form.checkValidity()) {
+    form.reportValidity();
+    return;
+  }
+
+  if (!endpoint || !/^https:\/\/formspree\.io\/f\//i.test(endpoint)) {
+    if (status) {
+      status.textContent = "Falta conectar el endpoint de Formspree.";
+      status.className = "contact-status error";
+    }
+    return;
+  }
+
+  const textoOriginal = button ? button.textContent : "";
+
+  try {
+    if (button) {
+      button.disabled = true;
+      button.textContent = "ENVIANDO...";
+    }
+
+    if (status) {
+      status.textContent = "Enviando mensaje...";
+      status.className = "contact-status";
+    }
+
+    const respuesta = await fetch(endpoint, {
+      method: "POST",
+      body: new FormData(form),
+      headers: {
+        Accept: "application/json"
+      }
+    });
+
+    if (!respuesta.ok) {
+      throw new Error("Formspree rechazó el envío.");
+    }
+
+    form.reset();
+
+    if (status) {
+      status.textContent = "✓ Mensaje enviado correctamente. Te responderemos pronto.";
+      status.className = "contact-status success";
+    }
+  } catch (error) {
+    console.error("Error enviando formulario de contacto:", error);
+
+    if (status) {
+      status.textContent = "No se pudo enviar el mensaje. Intenta nuevamente.";
+      status.className = "contact-status error";
+    }
+  } finally {
+    if (button) {
+      button.disabled = false;
+      button.textContent = textoOriginal || "ENVIAR MENSAJE";
+    }
+  }
+}
+
 function prepararInterfaz() {
   ["login-screen", "register-screen"].forEach(id => {
     const pantalla = document.getElementById(id);
@@ -154,6 +274,8 @@ function prepararInterfaz() {
     observer.observe(productsGrid, { childList: true });
     setTimeout(actualizarCategoriasUI, 400);
   }
+
+  crearFormularioContacto();
 
   document.addEventListener("keydown", event => {
     if (event.key !== "Escape") return;

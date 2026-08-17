@@ -1,6 +1,6 @@
 /* ==========================================
    URBAN SOCIETY
-   CONFIGURACIÓN BACKENDLESS
+   CONFIGURACIÓN
 ========================================== */
 
 const BACKENDLESS_CONFIG = {
@@ -17,4 +17,8 @@ const BACKENDLESS_CONFIG = {
     SUBDOMAIN:
         "shiningsubstance-us.backendless.app"
 
-}
+};
+
+/* Formulario de contacto */
+window.FORMSPREE_ENDPOINT =
+    "https://formspree.io/f/xqpzyrde";
