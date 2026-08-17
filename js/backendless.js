@@ -1,358 +1,183 @@
-/* ==========================================
+/* =========================================================
    URBAN SOCIETY
    BACKENDLESS.JS
-   CONEXIÓN PRINCIPAL
-========================================== */
+   Inicialización, sesión y compatibilidad de interfaz
+========================================================= */
 
+let backendlessReady = false;
 
-/* ==========================================
-   INICIAR BACKENDLESS
-========================================== */
+function cargarEstilosMejorados() {
+  if (document.querySelector('link[href="css/upgrade.css"]')) return;
+
+  const link = document.createElement("link");
+  link.rel = "stylesheet";
+  link.href = "css/upgrade.css";
+  document.head.appendChild(link);
+}
 
 function iniciarBackendless() {
+  if (backendlessReady) return true;
 
-    if (
-        typeof Backendless === "undefined"
-    ) {
+  if (typeof Backendless === "undefined") {
+    console.error("Backendless SDK no está cargado.");
+    return false;
+  }
 
-        console.error(
-            "ERROR: Backendless SDK no está cargado."
-        );
+  if (typeof BACKENDLESS_CONFIG === "undefined") {
+    console.error("BACKENDLESS_CONFIG no está definido.");
+    return false;
+  }
 
-        return false;
-    }
-
-
-    if (
-        typeof BACKENDLESS_CONFIG ===
-        "undefined"
-    ) {
-
-        console.error(
-            "ERROR: BACKENDLESS_CONFIG no está definido."
-        );
-
-        return false;
-    }
-
-
-    try {
-
-        Backendless.initApp(
-
-            BACKENDLESS_CONFIG.APPLICATION_ID,
-
-            BACKENDLESS_CONFIG.JS_API_KEY
-
-        );
-
-
-        console.log(
-            "Backendless conectado correctamente."
-        );
-
-
-        return true;
-
-
-    } catch (error) {
-
-        console.error(
-            "Error iniciando Backendless:",
-            error
-        );
-
-        return false;
-
-    }
-
+  try {
+    Backendless.initApp(
+      BACKENDLESS_CONFIG.APPLICATION_ID,
+      BACKENDLESS_CONFIG.JS_API_KEY
+    );
+    backendlessReady = true;
+    console.info("Backendless conectado.");
+    return true;
+  } catch (error) {
+    console.error("No se pudo iniciar Backendless:", error);
+    return false;
+  }
 }
-
-
-/* ==========================================
-   OBTENER USUARIO ACTUAL
-========================================== */
 
 async function obtenerUsuarioActual() {
+  if (!iniciarBackendless()) return null;
 
-    try {
-
-        if (
-            typeof Backendless ===
-            "undefined"
-        ) {
-
-            return null;
-
-        }
-
-
-        const usuario =
-            await Backendless.UserService
-                .getCurrentUser();
-
-
-        if (usuario) {
-
-            console.log(
-                "Usuario conectado:",
-                usuario.email
-            );
-
-        } else {
-
-            console.log(
-                "No hay usuario conectado."
-            );
-
-        }
-
-
-        return usuario;
-
-
-    } catch (error) {
-
-        console.error(
-            "Error obteniendo usuario:",
-            error
-        );
-
-        return null;
-
-    }
-
+  try {
+    return await Backendless.UserService.getCurrentUser();
+  } catch (error) {
+    console.warn("No se pudo recuperar la sesión:", error);
+    return null;
+  }
 }
-
-
-/* ==========================================
-   VERIFICAR SESIÓN
-========================================== */
 
 async function comprobarSesionBackendless() {
-
-    try {
-
-        const usuario =
-            await obtenerUsuarioActual();
-
-
-        return !!usuario;
-
-
-    } catch (error) {
-
-        console.error(
-            "Error comprobando sesión:",
-            error
-        );
-
-        return false;
-
-    }
-
+  return Boolean(await obtenerUsuarioActual());
 }
-
-
-/* ==========================================
-   VERIFICAR PROPIETARIO
-========================================== */
 
 async function verificarOwner() {
+  const usuario = await obtenerUsuarioActual();
 
-    try {
+  if (!usuario) {
+    alert("Debes iniciar sesión para entrar al panel.");
+    window.location.replace("UrbanSociety.html");
+    return false;
+  }
 
-        const usuario =
-            await obtenerUsuarioActual();
+  const email = String(usuario.email || "").trim().toLowerCase();
+  const ownerEmail = String(
+    typeof OWNER_EMAIL !== "undefined" ? OWNER_EMAIL : ""
+  ).trim().toLowerCase();
 
+  if (!ownerEmail || email !== ownerEmail) {
+    alert("Acceso denegado. Esta sección es únicamente para el propietario.");
+    window.location.replace("UrbanSociety.html");
+    return false;
+  }
 
-        if (!usuario) {
-
-            alert(
-                "Debes iniciar sesión para entrar al panel."
-            );
-
-
-            window.location.href =
-                "UrbanSociety.html";
-
-
-            return false;
-
-        }
-
-
-        /*
-           El propietario se determina mediante
-           OWNER_EMAIL definido en auth.js.
-        */
-
-        const email =
-            String(
-                usuario.email || ""
-            )
-                .trim()
-                .toLowerCase();
-
-
-        const ownerEmail =
-            typeof OWNER_EMAIL !==
-            "undefined"
-                ? String(
-                    OWNER_EMAIL
-                )
-                    .trim()
-                    .toLowerCase()
-                : "";
-
-
-        const esOwner =
-            email ===
-            ownerEmail;
-
-
-        /*
-           También permitimos role = owner.
-        */
-
-        const role =
-            String(
-                usuario.role || ""
-            )
-                .trim()
-                .toLowerCase();
-
-
-        const tieneRolOwner =
-            role === "owner" ||
-            role === "admin";
-
-
-        if (
-            !esOwner &&
-            !tieneRolOwner
-        ) {
-
-            alert(
-                "Acceso denegado. Esta sección es únicamente para el propietario."
-            );
-
-
-            window.location.href =
-                "UrbanSociety.html";
-
-
-            return false;
-
-        }
-
-
-        console.log(
-            "Acceso de propietario autorizado."
-        );
-
-
-        return true;
-
-
-    } catch (error) {
-
-        console.error(
-            "Error verificando propietario:",
-            error
-        );
-
-
-        alert(
-            "No se pudo comprobar el acceso."
-        );
-
-
-        window.location.href =
-            "UrbanSociety.html";
-
-
-        return false;
-
-    }
-
+  return true;
 }
-
-
-/* ==========================================
-   CERRAR SESIÓN
-========================================== */
 
 async function cerrarSesionBackendless() {
+  if (!iniciarBackendless()) return false;
 
-    try {
-
-        if (
-            typeof Backendless ===
-            "undefined"
-        ) {
-
-            return false;
-
-        }
-
-
-        await Backendless.UserService
-            .logout();
-
-
-        console.log(
-            "Sesión cerrada correctamente."
-        );
-
-
-        return true;
-
-
-    } catch (error) {
-
-        console.error(
-            "Error cerrando sesión:",
-            error
-        );
-
-
-        return false;
-
-    }
-
+  try {
+    await Backendless.UserService.logout();
+    return true;
+  } catch (error) {
+    console.error("No se pudo cerrar la sesión:", error);
+    return false;
+  }
 }
 
+function actualizarCategoriasUI() {
+  const select = document.getElementById("category-filter");
+  if (!select || typeof productosUrban === "undefined") return;
 
-/* ==========================================
-   INICIALIZAR
-========================================== */
+  const actual = select.value;
+  const categorias = [...new Set(
+    productosUrban
+      .map(producto => String(producto.category || "").trim())
+      .filter(Boolean)
+  )].sort((a, b) => a.localeCompare(b, "es"));
 
-document.addEventListener(
-    "DOMContentLoaded",
-    function () {
+  select.innerHTML = '<option value="">Todas las categorías</option>' +
+    categorias.map(categoria => {
+      const segura = typeof escaparHTML === "function"
+        ? escaparHTML(categoria)
+        : categoria.replace(/[&<>"']/g, "");
+      return `<option value="${segura}">${segura}</option>`;
+    }).join("");
 
-        iniciarBackendless();
+  if (categorias.includes(actual)) select.value = actual;
+}
 
-    }
-);
+function prepararInterfaz() {
+  ["login-screen", "register-screen"].forEach(id => {
+    const pantalla = document.getElementById(id);
+    if (!pantalla) return;
+    pantalla.hidden = false;
+    pantalla.style.display = "none";
+  });
 
+  const cartButton = document.getElementById("cart-button");
+  if (cartButton) {
+    cartButton.addEventListener("click", () => {
+      if (typeof abrirCarrito === "function") abrirCarrito();
+    });
+  }
 
-/* ==========================================
-   EXPORTAR FUNCIONES
-========================================== */
+  const menuButton = document.getElementById("menu-toggle");
+  const nav = document.getElementById("main-nav");
 
-window.iniciarBackendless =
-    iniciarBackendless;
+  if (menuButton && nav) {
+    menuButton.addEventListener("click", () => {
+      const abierto = nav.classList.toggle("open");
+      menuButton.setAttribute("aria-expanded", String(abierto));
+      menuButton.textContent = abierto ? "×" : "☰";
+    });
 
-window.obtenerUsuarioActual =
-    obtenerUsuarioActual;
+    nav.querySelectorAll("a").forEach(link => {
+      link.addEventListener("click", () => {
+        nav.classList.remove("open");
+        menuButton.setAttribute("aria-expanded", "false");
+        menuButton.textContent = "☰";
+      });
+    });
+  }
 
-window.comprobarSesionBackendless =
-    comprobarSesionBackendless;
+  const productsGrid = document.getElementById("products-grid");
+  if (productsGrid) {
+    const observer = new MutationObserver(actualizarCategoriasUI);
+    observer.observe(productsGrid, { childList: true });
+    setTimeout(actualizarCategoriasUI, 400);
+  }
 
-window.verificarOwner =
-    verificarOwner;
+  document.addEventListener("keydown", event => {
+    if (event.key !== "Escape") return;
 
-window.cerrarSesionBackendless =
-    cerrarSesionBackendless;
+    document.querySelectorAll(".modal-overlay.active").forEach(modal => {
+      modal.classList.remove("active");
+    });
+
+    const login = document.getElementById("login-screen");
+    const registro = document.getElementById("register-screen");
+    const tienda = document.getElementById("store-content");
+
+    if (login) login.style.display = "none";
+    if (registro) registro.style.display = "none";
+    if (tienda) tienda.style.display = "block";
+  });
+}
+
+cargarEstilosMejorados();
+iniciarBackendless();
+document.addEventListener("DOMContentLoaded", prepararInterfaz);
+
+window.iniciarBackendless = iniciarBackendless;
+window.obtenerUsuarioActual = obtenerUsuarioActual;
+window.comprobarSesionBackendless = comprobarSesionBackendless;
+window.verificarOwner = verificarOwner;
+window.cerrarSesionBackendless = cerrarSesionBackendless;

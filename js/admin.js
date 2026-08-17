@@ -1,8 +1,8 @@
-/* ==========================================
+/* =========================================================
    URBAN SOCIETY
    ADMIN.JS
-   PANEL DEL PROPIETARIO
-========================================== */
+   Panel del propietario
+========================================================= */
 
 const ADMIN_PRODUCTS_TABLE = "Products";
 const ADMIN_ORDERS_TABLE = "Orders";
@@ -10,1569 +10,362 @@ const ADMIN_ORDERS_TABLE = "Orders";
 let adminProducts = [];
 let adminOrders = [];
 
-
-/* ==========================================
-   INICIO
-========================================== */
-
-document.addEventListener(
-    "DOMContentLoaded",
-    async function () {
-
-        const autorizado =
-            await verificarOwner();
-
-        if (!autorizado) {
-            return;
-        }
-
-        iniciarPanelAdmin();
-
-    }
-);
-
-
-/* ==========================================
-   INICIAR PANEL
-========================================== */
-
-async function iniciarPanelAdmin() {
-
-    console.log(
-        "Panel de propietario iniciado."
-    );
-
-    await cargarProductosAdmin();
-
-    await cargarPedidosAdmin();
-
-    configurarFormularioProducto();
-
+function adminEl(id) {
+  return document.getElementById(id);
 }
 
+function escaparAdmin(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
 
-/* ==========================================
-   PRODUCTOS
-========================================== */
+function formatearAdminPrecio(precio) {
+  return new Intl.NumberFormat("es-MX", {
+    style: "currency",
+    currency: "MXN"
+  }).format(Number(precio || 0));
+}
+
+function mostrarErrorAdmin(mensaje) {
+  console.error(mensaje);
+}
+
+function mostrarNotificacionAdmin(mensaje) {
+  if (typeof mostrarNotificacion === "function") {
+    mostrarNotificacion(mensaje);
+  } else {
+    alert(mensaje);
+  }
+}
 
 async function cargarProductosAdmin() {
+  const container = adminEl("admin-products");
+  if (container) container.innerHTML = '<div class="empty-products">Cargando productos...</div>';
 
-    try {
-
-        const query =
-            Backendless.DataQueryBuilder
-                .create()
-                .setSortBy([
-                    "created DESC"
-                ]);
-
-
-        const resultado =
-            await Backendless.Data
-                .of(
-                    ADMIN_PRODUCTS_TABLE
-                )
-                .find(
-                    query
-                );
-
-
-        adminProducts =
-            resultado || [];
-
-            actualizarEstadisticasAdmin();
-
-        mostrarProductosAdmin(
-            adminProducts
-        );
-
-
-    } catch (error) {
-
-        console.error(
-            "Error cargando productos:",
-            error
-        );
-
-        mostrarErrorAdmin(
-            "No se pudieron cargar los productos."
-        );
-
-    }
-
+  try {
+    const query = Backendless.DataQueryBuilder.create().setSortBy(["created DESC"]);
+    adminProducts = await Backendless.Data.of(ADMIN_PRODUCTS_TABLE).find(query) || [];
+    mostrarProductosAdmin(adminProducts);
+    actualizarEstadisticasAdmin();
+  } catch (error) {
+    console.error("Error cargando productos:", error);
+    if (container) container.innerHTML = '<div class="empty-products">No se pudieron cargar los productos.</div>';
+  }
 }
 
+function mostrarProductosAdmin(productos) {
+  const container = adminEl("admin-products");
+  if (!container) return;
 
-/* ==========================================
-   MOSTRAR PRODUCTOS
-========================================== */
+  if (!productos.length) {
+    container.innerHTML = '<div class="empty-products"><h3>No hay productos</h3><p>Agrega tu primer producto.</p></div>';
+    return;
+  }
 
-function mostrarProductosAdmin(
-    productos
-) {
-
-    const container =
-        document.getElementById(
-            "admin-products"
-        );
-
-
-    if (!container) {
-        return;
-    }
-
-
-    if (!productos.length) {
-
-        container.innerHTML = `
-
-            <div class="empty-products">
-
-                <h3>
-                    No hay productos
-                </h3>
-
-                <p>
-                    Agrega tu primer producto.
-                </p>
-
-            </div>
-
-        `;
-
-        return;
-
-    }
-
-
-    container.innerHTML =
-        productos
-            .map(
-                producto =>
-                    tarjetaProductoAdmin(
-                        producto
-                    )
-            )
-            .join("");
-
+  container.innerHTML = productos.map(tarjetaProductoAdmin).join("");
 }
 
+function tarjetaProductoAdmin(producto) {
+  const id = escaparAdmin(producto.objectId || "");
+  const nombre = escaparAdmin(producto.name || "Sin nombre");
+  const categoria = escaparAdmin(producto.category || "General");
+  const precio = Number(producto.price || 0);
+  const stock = Number(producto.stock || 0);
+  const imagen = escaparAdmin(producto.image || producto.imageUrl || "images/Logo Urban.png");
 
-/* ==========================================
-   TARJETA ADMIN
-========================================== */
-
-function tarjetaProductoAdmin(
-    producto
-) {
-
-    const id =
-        escaparAdmin(
-            producto.objectId
-        );
-
-
-    const nombre =
-        escaparAdmin(
-            producto.name ||
-            "Sin nombre"
-        );
-
-
-    const categoria =
-        escaparAdmin(
-            producto.category ||
-            "General"
-        );
-
-
-    const precio =
-        Number(
-            producto.price || 0
-        );
-
-
-    const stock =
-        Number(
-            producto.stock || 0
-        );
-
-
-    const imagen =
-        producto.image ||
-        producto.imageUrl ||
-        "images/Logo Urban.png";
-
-
-    return `
-
-        <div class="admin-product-card">
-
-
-            <img
-                src="${escaparAdmin(imagen)}"
-                alt="${nombre}"
-                onerror="
-                    this.src='images/Logo Urban.png'
-                "
-            >
-
-
-            <div
-                class="admin-product-info"
-            >
-
-                <span>
-                    ${categoria}
-                </span>
-
-
-                <h3>
-                    ${nombre}
-                </h3>
-
-
-                <strong>
-                    ${formatearAdminPrecio(precio)}
-                </strong>
-
-
-                <p>
-                    Stock:
-                    <b>
-                        ${stock}
-                    </b>
-                </p>
-
-
-                <div
-                    class="admin-product-actions"
-                >
-
-                    <button
-                        type="button"
-                        onclick="
-                            editarProductoAdmin(
-                                '${id}'
-                            )
-                        "
-                    >
-                        ✏️ Editar
-                    </button>
-
-
-                    <button
-                        type="button"
-                        onclick="
-                            eliminarProductoAdmin(
-                                '${id}'
-                            )
-                        "
-                    >
-                        🗑️ Eliminar
-                    </button>
-
-                </div>
-
-            </div>
-
+  return `
+    <div class="admin-product-card">
+      <img src="${imagen}" alt="${nombre}" onerror="this.src='images/Logo Urban.png'">
+      <div class="admin-product-info">
+        <span>${categoria}</span>
+        <h3>${nombre}</h3>
+        <strong>${formatearAdminPrecio(precio)}</strong>
+        <p>Stock: <b>${stock}</b></p>
+        <div class="admin-product-actions">
+          <button type="button" onclick="editarProductoAdmin('${id}')">✏️ Editar</button>
+          <button type="button" onclick="eliminarProductoAdmin('${id}')">🗑️ Eliminar</button>
         </div>
-
-    `;
-
-}
-
-
-/* ==========================================
-   AGREGAR PRODUCTO
-========================================== */
-
-function configurarFormularioProducto() {
-
-    const form =
-        document.getElementById(
-            "product-form"
-        );
-
-    if (!form) {
-        return;
-    }
-
-
-    form.addEventListener(
-        "submit",
-        guardarProductoAdmin
-    );
-
-
-    const fileInput =
-        document.getElementById(
-            "product-image-file"
-        );
-
-
-    if (fileInput) {
-
-        fileInput.addEventListener(
-            "change",
-            mostrarVistaPrevia
-        );
-
-    }
-
+      </div>
+    </div>
+  `;
 }
 
 function mostrarVistaPrevia(event) {
+  const archivo = event.target.files?.[0];
+  const preview = adminEl("image-preview");
+  const container = adminEl("image-preview-container");
+  const status = adminEl("image-upload-status");
 
-    const archivo =
-        event.target.files[0];
+  if (!archivo) {
+    if (container) container.style.display = "none";
+    return;
+  }
 
+  if (!archivo.type.startsWith("image/")) {
+    alert("Selecciona una imagen válida.");
+    event.target.value = "";
+    return;
+  }
 
-    const preview =
-        document.getElementById(
-            "image-preview"
-        );
+  if (archivo.size > 5 * 1024 * 1024) {
+    alert("La imagen no puede superar 5 MB.");
+    event.target.value = "";
+    return;
+  }
 
+  const reader = new FileReader();
+  reader.onload = () => {
+    if (preview) preview.src = reader.result;
+    if (container) container.style.display = "block";
+  };
+  reader.readAsDataURL(archivo);
 
-    const container =
-        document.getElementById(
-            "image-preview-container"
-        );
-
-
-    const status =
-        document.getElementById(
-            "image-upload-status"
-        );
-
-
-    if (!archivo) {
-
-        if (container) {
-            container.style.display =
-                "none";
-        }
-
-        return;
-
-    }
-
-
-    if (!archivo.type.startsWith("image/")) {
-
-        alert(
-            "Selecciona una imagen válida."
-        );
-
-        event.target.value = "";
-
-        return;
-
-    }
-
-
-    if (
-        archivo.size >
-        5 * 1024 * 1024
-    ) {
-
-        alert(
-            "La imagen no puede superar 5 MB."
-        );
-
-        event.target.value = "";
-
-        return;
-
-    }
-
-
-    const reader =
-        new FileReader();
-
-
-    reader.onload =
-        function () {
-
-            if (preview) {
-
-                preview.src =
-                    reader.result;
-
-            }
-
-
-            if (container) {
-
-                container.style.display =
-                    "block";
-
-            }
-
-        };
-
-
-    reader.readAsDataURL(
-        archivo
-    );
-
-
-    if (status) {
-
-        status.textContent =
-            archivo.name;
-
-    }
-
+  if (status) status.textContent = archivo.name;
 }
 
 async function subirImagenProducto() {
-
-    const input =
-        document.getElementById(
-            "product-image-file"
-        );
-
-
-    if (
-        !input ||
-        !input.files ||
-        !input.files.length
-    ) {
-
-        return null;
-
-    }
-
-
-    const archivo =
-        input.files[0];
-
-
-    const status =
-        document.getElementById(
-            "image-upload-status"
-        );
-
-
-    try {
-
-        if (status) {
-
-            status.textContent =
-                "Subiendo fotografía...";
-
-        }
-
-
-        const timestamp =
-            Date.now();
-
-
-        const nombreSeguro =
-            archivo.name
-                .replace(
-                    /[^a-zA-Z0-9._-]/g,
-                    "_"
-                );
-
-
-        const nombreArchivo =
-            `products/${timestamp}_${nombreSeguro}`;
-
-
-        const resultado =
-            await Backendless.Files
-                .upload(
-                    archivo,
-                    nombreArchivo,
-                    true
-                );
-
-
-        console.log(
-            "Imagen subida:",
-            resultado
-        );
-
-
-        const url =
-            resultado.fileURL ||
-            resultado.url;
-
-
-        if (!url) {
-
-            throw new Error(
-                "Backendless no devolvió la URL de la imagen."
-            );
-
-        }
-
-
-        if (status) {
-
-            status.textContent =
-                "✓ Fotografía subida correctamente.";
-
-        }
-
-
-        return url;
-
-
-    } catch (error) {
-
-        console.error(
-            "Error subiendo imagen:",
-            error
-        );
-
-
-        if (status) {
-
-            status.textContent =
-                "Error al subir la fotografía.";
-
-        }
-
-
-        throw error;
-
-    }
-
-}
-/* ==========================================
-   GUARDAR PRODUCTO
-========================================== */
-
-async function guardarProductoAdmin(
-    event
-) {
-
-    event.preventDefault();
-
-
-    const form =
-        event.target;
-
-
-    const objectId =
-        document.getElementById(
-            "product-id"
-        )?.value.trim();
-
-
-    const name =
-        document.getElementById(
-            "product-name"
-        )?.value.trim();
-
-
-    const price =
-        Number(
-            document.getElementById(
-                "product-price"
-            )?.value || 0
-        );
-
-
-    const category =
-        document.getElementById(
-            "product-category"
-        )?.value.trim();
-
-
-    const stock =
-        Number(
-            document.getElementById(
-                "product-stock"
-            )?.value || 0
-        );
-
-
-   let image =
-    document.getElementById(
-        "product-image"
-    )?.value.trim() || "";
-
-
-    const description =
-        document.getElementById(
-            "product-description"
-        )?.value.trim();
-
-
-    if (!name) {
-
-        alert(
-            "Escribe el nombre del producto."
-        );
-
-        return;
-
-    }
-
-
-    if (price < 0) {
-
-        alert(
-            "El precio no puede ser negativo."
-        );
-
-        return;
-
-    }
-
-
-    if (stock < 0) {
-
-        alert(
-            "El stock no puede ser negativo."
-        );
-
-        return;
-
-    }
-
-
-    try {
-
-    const archivoImagen =
-    document.getElementById(
-        "product-image-file"
-    )?.files?.[0];
-
-
-if (archivoImagen) {
-
-    try {
-
-        image =
-            await subirImagenProducto();
-
-    } catch (error) {
-
-        alert(
-            "No se pudo subir la fotografía."
-        );
-
-        return;
-
-    }
-
+  const input = adminEl("product-image-file");
+  const archivo = input?.files?.[0];
+  if (!archivo) return null;
+
+  const status = adminEl("image-upload-status");
+  if (status) status.textContent = "Subiendo fotografía...";
+
+  const nombreSeguro = archivo.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+  const ruta = `products/${Date.now()}_${nombreSeguro}`;
+
+  try {
+    const resultado = await Backendless.Files.upload(archivo, ruta, true);
+    const url = resultado?.fileURL || resultado?.url;
+    if (!url) throw new Error("Backendless no devolvió la URL de la imagen.");
+    if (status) status.textContent = "✓ Fotografía subida correctamente.";
+    return url;
+  } catch (error) {
+    if (status) status.textContent = "Error al subir la fotografía.";
+    throw error;
+  }
 }
 
-        const producto = {
+function limpiarCamposVisualesProducto() {
+  if (adminEl("product-id")) adminEl("product-id").value = "";
+  if (adminEl("product-image")) adminEl("product-image").value = "";
 
-            name:
-                name,
+  const previewContainer = adminEl("image-preview-container");
+  if (previewContainer) previewContainer.style.display = "none";
 
-            price:
-                price,
+  const preview = adminEl("image-preview");
+  if (preview) preview.removeAttribute("src");
 
-            category:
-                category ||
-                "Otros",
+  const status = adminEl("image-upload-status");
+  if (status) status.textContent = "Selecciona una fotografía desde tu computadora.";
 
-            stock:
-                stock,
-
-            image:
-                image,
-
-            description:
-                description
-
-        };
-
-
-        if (objectId) {
-
-            producto.objectId =
-                objectId;
-
-        }
-
-
-        const guardado =
-            await Backendless.Data
-                .of(
-                    ADMIN_PRODUCTS_TABLE
-                )
-                .save(
-                    producto
-                );
-
-
-        console.log(
-            "Producto guardado:",
-            guardado
-        );
-
-
-        alert(
-            objectId
-                ? "Producto actualizado correctamente."
-                : "Producto agregado correctamente."
-        );
-
-
-        form.reset();
-
-
-        const idInput =
-            document.getElementById(
-                "product-id"
-            );
-
-
-        if (idInput) {
-
-            idInput.value = "";
-
-        }
-
-
-        const submit =
-            form.querySelector(
-                "button[type='submit']"
-            );
-
-
-        if (submit) {
-
-            submit.textContent =
-                "Agregar producto";
-
-        }
-
-
-        await cargarProductosAdmin();
-
-
-    } catch (error) {
-
-        console.error(
-            "Error guardando producto:",
-            error
-        );
-
-
-        alert(
-            "No se pudo guardar el producto.\n\n" +
-            (
-                error.message ||
-                "Error desconocido."
-            )
-        );
-
-    }
-
+  const submit = adminEl("product-form")?.querySelector("button[type='submit']");
+  if (submit) submit.textContent = "Agregar producto";
 }
 
-
-/* ==========================================
-   EDITAR PRODUCTO
-========================================== */
-
-function editarProductoAdmin(
-    id
-) {
-
-    const producto =
-        adminProducts.find(
-            item =>
-                item.objectId === id
-        );
-
-
-    if (!producto) {
-
-        alert(
-            "Producto no encontrado."
-        );
-
-        return;
-
-    }
-
-
-    const idInput =
-        document.getElementById(
-            "product-id"
-        );
-
-
-    const name =
-        document.getElementById(
-            "product-name"
-        );
-
-
-    const price =
-        document.getElementById(
-            "product-price"
-        );
-
-
-    const category =
-        document.getElementById(
-            "product-category"
-        );
-
-
-    const stock =
-        document.getElementById(
-            "product-stock"
-        );
-
-
-    const image =
-        document.getElementById(
-            "product-image"
-        );
-
-
-    const description =
-        document.getElementById(
-            "product-description"
-        );
-
-
-    if (idInput) {
-
-        idInput.value =
-            producto.objectId || "";
-
-    }
-
-
-    if (name) {
-
-        name.value =
-            producto.name || "";
-
-    }
-
-
-    if (price) {
-
-        price.value =
-            producto.price || 0;
-
-    }
-
-
-    if (category) {
-
-        category.value =
-            producto.category || "";
-
-    }
-
-
-    if (stock) {
-
-        stock.value =
-            producto.stock || 0;
-
-    }
-
-
-    if (image) {
-
-        image.value =
-            producto.image ||
-            producto.imageUrl ||
-            "";
-
-    }
-
-    const fileInput =
-    document.getElementById(
-        "product-image-file"
-    );
-
-
-if (fileInput) {
-
-    fileInput.value = "";
-
+function limpiarFormularioProducto() {
+  const form = adminEl("product-form");
+  if (form) form.reset();
+  limpiarCamposVisualesProducto();
 }
 
-    if (description) {
+async function guardarProductoAdmin(event) {
+  event.preventDefault();
 
-        description.value =
-            producto.description || "";
+  const objectId = adminEl("product-id")?.value.trim() || "";
+  const name = adminEl("product-name")?.value.trim() || "";
+  const price = Number(adminEl("product-price")?.value || 0);
+  const category = adminEl("product-category")?.value.trim() || "Otros";
+  const stock = Number(adminEl("product-stock")?.value || 0);
+  const description = adminEl("product-description")?.value.trim() || "";
+  let image = adminEl("product-image")?.value.trim() || "";
 
+  if (!name) return alert("Escribe el nombre del producto.");
+  if (!Number.isFinite(price) || price < 0) return alert("Escribe un precio válido.");
+  if (!Number.isInteger(stock) || stock < 0) return alert("Escribe un stock válido.");
+
+  const submit = event.target.querySelector("button[type='submit']");
+  if (submit) {
+    submit.disabled = true;
+    submit.textContent = objectId ? "Guardando cambios..." : "Agregando...";
+  }
+
+  try {
+    if (adminEl("product-image-file")?.files?.[0]) {
+      image = await subirImagenProducto();
     }
 
+    const producto = { name, price, category, stock, image, description };
+    if (objectId) producto.objectId = objectId;
 
-    const submit =
-        document.querySelector(
-            "#product-form button[type='submit']"
-        );
-
-
-    if (submit) {
-
-        submit.textContent =
-            "Guardar cambios";
-
-    }
-
-
-    document
-        .getElementById(
-            "product-form"
-        )
-        ?.scrollIntoView({
-            behavior: "smooth"
-        });
-
+    await Backendless.Data.of(ADMIN_PRODUCTS_TABLE).save(producto);
+    mostrarNotificacionAdmin(objectId ? "Producto actualizado." : "Producto agregado.");
+    limpiarFormularioProducto();
+    await cargarProductosAdmin();
+  } catch (error) {
+    console.error("Error guardando producto:", error);
+    alert("No se pudo guardar el producto.\n\n" + (error.message || "Error desconocido."));
+  } finally {
+    if (submit) submit.disabled = false;
+  }
 }
 
+function editarProductoAdmin(id) {
+  const producto = adminProducts.find(item => item.objectId === id);
+  if (!producto) return alert("Producto no encontrado.");
 
-/* ==========================================
-   ELIMINAR PRODUCTO
-========================================== */
+  adminEl("product-id").value = producto.objectId || "";
+  adminEl("product-name").value = producto.name || "";
+  adminEl("product-price").value = producto.price ?? 0;
+  adminEl("product-category").value = producto.category || "";
+  adminEl("product-stock").value = producto.stock ?? 0;
+  adminEl("product-image").value = producto.image || producto.imageUrl || "";
+  adminEl("product-description").value = producto.description || "";
 
-async function eliminarProductoAdmin(
-    id
-) {
+  const fileInput = adminEl("product-image-file");
+  if (fileInput) fileInput.value = "";
 
-    const producto =
-        adminProducts.find(
-            item =>
-                item.objectId === id
-        );
+  const preview = adminEl("image-preview");
+  const previewContainer = adminEl("image-preview-container");
+  const actual = producto.image || producto.imageUrl || "";
+  if (actual && preview && previewContainer) {
+    preview.src = actual;
+    previewContainer.style.display = "block";
+  }
 
+  const submit = adminEl("product-form")?.querySelector("button[type='submit']");
+  if (submit) submit.textContent = "Guardar cambios";
 
-    if (!producto) {
-        return;
-    }
-
-
-    const confirmar =
-        confirm(
-            `¿Eliminar "${producto.name}"?`
-        );
-
-
-    if (!confirmar) {
-        return;
-    }
-
-
-    try {
-
-        await Backendless.Data
-            .of(
-                ADMIN_PRODUCTS_TABLE
-            )
-            .remove(
-                id
-            );
-
-
-        alert(
-            "Producto eliminado correctamente."
-        );
-
-
-        await cargarProductosAdmin();
-
-
-    } catch (error) {
-
-        console.error(
-            "Error eliminando producto:",
-            error
-        );
-
-
-        alert(
-            "No se pudo eliminar el producto.\n\n" +
-            (
-                error.message ||
-                "Error desconocido."
-            )
-        );
-
-    }
-
+  adminEl("product-form")?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
+async function eliminarProductoAdmin(id) {
+  const producto = adminProducts.find(item => item.objectId === id);
+  if (!producto) return;
 
-/* ==========================================
-   PEDIDOS
-========================================== */
+  if (!confirm(`¿Eliminar "${producto.name || "este producto"}"?`)) return;
+
+  try {
+    await Backendless.Data.of(ADMIN_PRODUCTS_TABLE).remove(id);
+    mostrarNotificacionAdmin("Producto eliminado.");
+    await cargarProductosAdmin();
+  } catch (error) {
+    console.error("Error eliminando producto:", error);
+    alert("No se pudo eliminar el producto.\n\n" + (error.message || "Error desconocido."));
+  }
+}
 
 async function cargarPedidosAdmin() {
+  const container = adminEl("admin-orders");
+  if (container) container.innerHTML = '<div class="empty-products">Cargando pedidos...</div>';
 
-    try {
-
-        const query =
-            Backendless.DataQueryBuilder
-                .create()
-                .setSortBy([
-                    "created DESC"
-                ]);
-
-
-        const resultado =
-            await Backendless.Data
-                .of(
-                    ADMIN_ORDERS_TABLE
-                )
-                .find(
-                    query
-                );
-
-
-        adminOrders =
-            resultado || [];
-
-
-        mostrarPedidosAdmin(
-            adminOrders
-        );
-
-
-    } catch (error) {
-
-        console.error(
-            "Error cargando pedidos:",
-            error
-        );
-
-
-        mostrarErrorAdmin(
-            "No se pudieron cargar los pedidos."
-        );
-
-    }
-
+  try {
+    const query = Backendless.DataQueryBuilder.create().setSortBy(["created DESC"]);
+    adminOrders = await Backendless.Data.of(ADMIN_ORDERS_TABLE).find(query) || [];
+    mostrarPedidosAdmin(adminOrders);
+    actualizarEstadisticasAdmin();
+  } catch (error) {
+    console.error("Error cargando pedidos:", error);
+    if (container) container.innerHTML = '<div class="empty-products">No se pudieron cargar los pedidos.</div>';
+  }
 }
 
+function mostrarPedidosAdmin(pedidos) {
+  const container = adminEl("admin-orders");
+  if (!container) return;
 
-/* ==========================================
-   MOSTRAR PEDIDOS
-========================================== */
+  if (!pedidos.length) {
+    container.innerHTML = '<div class="empty-products"><h3>No hay pedidos</h3><p>Los nuevos pedidos aparecerán aquí.</p></div>';
+    return;
+  }
 
-function mostrarPedidosAdmin(
-    pedidos
-) {
-
-    const container =
-        document.getElementById(
-            "admin-orders"
-        );
-
-
-    if (!container) {
-        return;
-    }
-
-
-    if (!pedidos.length) {
-
-        container.innerHTML = `
-
-            <div class="empty-products">
-
-                <h3>
-                    No hay pedidos
-                </h3>
-
-                <p>
-                    Los nuevos pedidos aparecerán aquí.
-                </p>
-
-            </div>
-
-        `;
-
-        return;
-
-    }
-
-
-    container.innerHTML =
-        pedidos
-            .map(
-                pedido =>
-                    tarjetaPedidoAdmin(
-                        pedido
-                    )
-            )
-            .join("");
-
+  container.innerHTML = pedidos.map(tarjetaPedidoAdmin).join("");
 }
 
+function tarjetaPedidoAdmin(pedido) {
+  const id = escaparAdmin(pedido.objectId || "");
+  const nombre = escaparAdmin(pedido.customerName || "Cliente");
+  const email = escaparAdmin(pedido.customerEmail || "");
+  const telefono = escaparAdmin(pedido.customerPhone || "");
+  const direccion = escaparAdmin(pedido.address || "");
+  const metodo = escaparAdmin(pedido.paymentMethod || "No especificado");
+  const estado = String(pedido.status || "Pendiente");
+  const total = Number(pedido.total || 0);
+  const estados = ["Pendiente", "Confirmado", "Preparando", "Enviado", "Entregado", "Cancelado"];
 
-/* ==========================================
-   TARJETA PEDIDO
-========================================== */
-
-function tarjetaPedidoAdmin(
-    pedido
-) {
-
-    const id =
-        escaparAdmin(
-            pedido.objectId
-        );
-
-
-    const nombre =
-        escaparAdmin(
-            pedido.customerName ||
-            "Cliente"
-        );
-
-
-    const email =
-        escaparAdmin(
-            pedido.customerEmail ||
-            ""
-        );
-
-
-    const telefono =
-        escaparAdmin(
-            pedido.customerPhone ||
-            ""
-        );
-
-
-    const direccion =
-        escaparAdmin(
-            pedido.address ||
-            ""
-        );
-
-
-    const metodo =
-        escaparAdmin(
-            pedido.paymentMethod ||
-            "No especificado"
-        );
-
-
-    const estado =
-        pedido.status ||
-        "Pendiente";
-
-
-    const total =
-        Number(
-            pedido.total || 0
-        );
-
-
-    return `
-
-        <div class="admin-order-card">
-
-
-            <div
-                class="admin-order-header"
-            >
-
-                <strong>
-                    Pedido #${id}
-                </strong>
-
-
-                <span
-                    class="order-status"
-                >
-                    ${escaparAdmin(estado)}
-                </span>
-
-            </div>
-
-
-            <div
-                class="admin-order-body"
-            >
-
-                <p>
-                    <b>Cliente:</b>
-                    ${nombre}
-                </p>
-
-
-                <p>
-                    <b>Email:</b>
-                    ${email}
-                </p>
-
-
-                <p>
-                    <b>Teléfono:</b>
-                    ${telefono}
-                </p>
-
-
-                <p>
-                    <b>Dirección:</b>
-                    ${direccion}
-                </p>
-
-
-                <p>
-                    <b>Pago:</b>
-                    ${metodo}
-                </p>
-
-
-                <p>
-                    <b>Total:</b>
-                    ${formatearAdminPrecio(total)}
-                </p>
-
-
-                <label>
-                    Estado del pedido
-                </label>
-
-
-                <select
-                    onchange="
-                        cambiarEstadoPedido(
-                            '${id}',
-                            this.value
-                        )
-                    "
-                >
-
-                    <option
-                        value="Pendiente"
-                        ${
-                            estado ===
-                            "Pendiente"
-                                ? "selected"
-                                : ""
-                        }
-                    >
-                        Pendiente
-                    </option>
-
-
-                    <option
-                        value="Confirmado"
-                        ${
-                            estado ===
-                            "Confirmado"
-                                ? "selected"
-                                : ""
-                        }
-                    >
-                        Confirmado
-                    </option>
-
-
-                    <option
-                        value="Preparando"
-                        ${
-                            estado ===
-                            "Preparando"
-                                ? "selected"
-                                : ""
-                        }
-                    >
-                        Preparando
-                    </option>
-
-
-                    <option
-                        value="Enviado"
-                        ${
-                            estado ===
-                            "Enviado"
-                                ? "selected"
-                                : ""
-                        }
-                    >
-                        Enviado
-                    </option>
-
-
-                    <option
-                        value="Entregado"
-                        ${
-                            estado ===
-                            "Entregado"
-                                ? "selected"
-                                : ""
-                        }
-                    >
-                        Entregado
-                    </option>
-
-
-                    <option
-                        value="Cancelado"
-                        ${
-                            estado ===
-                            "Cancelado"
-                                ? "selected"
-                                : ""
-                        }
-                    >
-                        Cancelado
-                    </option>
-
-                </select>
-
-            </div>
-
-        </div>
-
-    `;
-
+  return `
+    <div class="admin-order-card">
+      <div class="admin-order-header"><strong>Pedido #${id}</strong><span class="order-status">${escaparAdmin(estado)}</span></div>
+      <div class="admin-order-body">
+        <p><b>Cliente:</b> ${nombre}</p>
+        <p><b>Email:</b> ${email}</p>
+        <p><b>Teléfono:</b> ${telefono}</p>
+        <p><b>Dirección:</b> ${direccion}</p>
+        <p><b>Pago:</b> ${metodo}</p>
+        <p><b>Total:</b> ${formatearAdminPrecio(total)}</p>
+        <label>Estado del pedido</label>
+        <select onchange="cambiarEstadoPedido('${id}', this.value)">
+          ${estados.map(item => `<option value="${item}" ${item === estado ? "selected" : ""}>${item}</option>`).join("")}
+        </select>
+      </div>
+    </div>
+  `;
 }
 
-
-/* ==========================================
-   CAMBIAR ESTADO
-========================================== */
-
-async function cambiarEstadoPedido(
-    id,
-    estado
-) {
-
-    try {
-
-        await Backendless.Data
-            .of(
-                ADMIN_ORDERS_TABLE
-            )
-            .save({
-
-                objectId:
-                    id,
-
-                status:
-                    estado
-
-            });
-
-
-        mostrarNotificacionAdmin(
-            "Estado actualizado."
-        );
-
-
-        await cargarPedidosAdmin();
-
-
-    } catch (error) {
-
-        console.error(
-            "Error actualizando pedido:",
-            error
-        );
-
-
-        alert(
-            "No se pudo actualizar el pedido."
-        );
-
-    }
-
+async function cambiarEstadoPedido(id, estado) {
+  try {
+    await Backendless.Data.of(ADMIN_ORDERS_TABLE).save({ objectId: id, status: estado });
+    mostrarNotificacionAdmin("Estado actualizado.");
+    await cargarPedidosAdmin();
+  } catch (error) {
+    console.error("Error actualizando pedido:", error);
+    alert("No se pudo actualizar el pedido.");
+  }
 }
-
-
-/* ==========================================
-   UTILIDADES
-========================================== */
-
-function formatearAdminPrecio(
-    precio
-) {
-
-    return new Intl.NumberFormat(
-        "es-MX",
-        {
-            style: "currency",
-            currency: "MXN"
-        }
-    ).format(
-        Number(
-            precio || 0
-        )
-    );
-
-}
-
-
-function escaparAdmin(
-    value
-) {
-
-    return String(
-        value ?? ""
-    )
-        .replaceAll(
-            "&",
-            "&amp;"
-        )
-        .replaceAll(
-            "<",
-            "&lt;"
-        )
-        .replaceAll(
-            ">",
-            "&gt;"
-        )
-        .replaceAll(
-            '"',
-            "&quot;"
-        )
-        .replaceAll(
-            "'",
-            "&#039;"
-        );
-
-}
-
-
-function mostrarErrorAdmin(
-    mensaje
-) {
-
-    console.error(
-        mensaje
-    );
-
-}
-
-
-function mostrarNotificacionAdmin(
-    mensaje
-) {
-
-    if (
-        typeof mostrarNotificacion ===
-        "function"
-    ) {
-
-        mostrarNotificacion(
-            mensaje
-        );
-
-        return;
-
-    }
-
-
-    alert(
-        mensaje
-    );
-
-}
-
-/* ==========================================
-   ESTADÍSTICAS
-========================================== */
 
 function actualizarEstadisticasAdmin() {
+  const productosCount = adminEl("admin-products-count");
+  const pedidosCount = adminEl("admin-orders-count");
+  const ventasTotal = adminEl("admin-sales-total");
 
-    const productosCount =
-        document.getElementById(
-            "admin-products-count"
-        );
+  if (productosCount) productosCount.textContent = adminProducts.length;
+  if (pedidosCount) pedidosCount.textContent = adminOrders.length;
 
-    const pedidosCount =
-        document.getElementById(
-            "admin-orders-count"
-        );
-
-    const ventasTotal =
-        document.getElementById(
-            "admin-sales-total"
-        );
-
-
-    if (productosCount) {
-
-        productosCount.textContent =
-            adminProducts.length;
-
-    }
-
-
-    if (pedidosCount) {
-
-        pedidosCount.textContent =
-            adminOrders.length;
-
-    }
-
-
-    if (ventasTotal) {
-
-        const total =
-            adminOrders.reduce(
-                (
-                    suma,
-                    pedido
-                ) => {
-
-                    if (
-                        pedido.status ===
-                        "Cancelado"
-                    ) {
-
-                        return suma;
-
-                    }
-
-
-                    return (
-                        suma +
-                        Number(
-                            pedido.total || 0
-                        )
-                    );
-
-                },
-                0
-            );
-
-
-        ventasTotal.textContent =
-            formatearAdminPrecio(
-                total
-            );
-
-    }
-
+  if (ventasTotal) {
+    const total = adminOrders.reduce((suma, pedido) => {
+      return pedido.status === "Cancelado" ? suma : suma + Number(pedido.total || 0);
+    }, 0);
+    ventasTotal.textContent = formatearAdminPrecio(total);
+  }
 }
 
-window.actualizarEstadisticasAdmin =
-    actualizarEstadisticasAdmin;
+async function iniciarPanelAdmin() {
+  await Promise.all([
+    cargarProductosAdmin(),
+    cargarPedidosAdmin()
+  ]);
+  actualizarEstadisticasAdmin();
+}
 
-/* ==========================================
-   EXPORTAR
-========================================== */
+document.addEventListener("DOMContentLoaded", async () => {
+  const autorizado = await verificarOwner();
+  if (!autorizado) return;
 
-window.cargarProductosAdmin =
-    cargarProductosAdmin;
+  const form = adminEl("product-form");
+  form?.addEventListener("submit", guardarProductoAdmin);
+  form?.addEventListener("reset", () => setTimeout(limpiarCamposVisualesProducto, 0));
+  adminEl("product-image-file")?.addEventListener("change", mostrarVistaPrevia);
 
-window.cargarPedidosAdmin =
-    cargarPedidosAdmin;
+  await iniciarPanelAdmin();
+});
 
-window.editarProductoAdmin =
-    editarProductoAdmin;
-
-window.eliminarProductoAdmin =
-    eliminarProductoAdmin;
-
-window.cambiarEstadoPedido =
-    cambiarEstadoPedido;
+window.cargarProductosAdmin = cargarProductosAdmin;
+window.cargarPedidosAdmin = cargarPedidosAdmin;
+window.editarProductoAdmin = editarProductoAdmin;
+window.eliminarProductoAdmin = eliminarProductoAdmin;
+window.cambiarEstadoPedido = cambiarEstadoPedido;
+window.actualizarEstadisticasAdmin = actualizarEstadisticasAdmin;
