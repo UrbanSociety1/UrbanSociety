@@ -37,7 +37,9 @@ const URBAN_BACKOFFICE_PAGES = [
     "admin.html","pos.html","products.html","orders.html","cash.html","reports.html",
     "returns.html","inventory.html","customers.html","staff.html","settings.html"
 ];
-const URBAN_CURRENT_PAGE = (location.pathname.split("/").pop() || "").toLowerCase();
+const URBAN_PATH_PAGE = (location.pathname.split("/").pop() || "").toLowerCase();
+/* En producción Netlify sirve UrbanSociety.html internamente desde /. */
+const URBAN_CURRENT_PAGE = URBAN_PATH_PAGE || "urbansociety.html";
 
 if (URBAN_BACKOFFICE_PAGES.includes(URBAN_CURRENT_PAGE)) {
     urbanAddCss("css/backoffice.css");
