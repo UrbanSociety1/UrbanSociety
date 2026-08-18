@@ -2,7 +2,7 @@
   "name": "Urban Society",
   "short_name": "Urban",
   "description": "Urban Society - Streetwear & Sneakers",
-  "start_url": "./UrbanSociety.html",
+  "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "background_color": "#08080b",
