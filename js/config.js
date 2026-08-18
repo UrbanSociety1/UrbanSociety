@@ -38,8 +38,8 @@ const URBAN_BACKOFFICE_PAGES = [
     "returns.html","inventory.html","customers.html","staff.html","settings.html"
 ];
 const URBAN_PATH_PAGE = (location.pathname.split("/").pop() || "").toLowerCase();
-/* En producción Netlify sirve UrbanSociety.html internamente desde /. */
-const URBAN_CURRENT_PAGE = URBAN_PATH_PAGE || "urbansociety.html";
+const URBAN_CURRENT_PAGE = URBAN_PATH_PAGE || "index.html";
+const URBAN_STOREFRONT_PAGES = ["index.html", "urbansociety.html"];
 
 if (URBAN_BACKOFFICE_PAGES.includes(URBAN_CURRENT_PAGE)) {
     urbanAddCss("css/backoffice.css");
@@ -53,7 +53,7 @@ document.write('<script src="js/order-notifications.js"><\/script>');
 document.write('<script src="js/checkout-secure.js"><\/script>');
 document.write('<script src="js/my-orders.js"><\/script>');
 
-if (URBAN_CURRENT_PAGE === "urbansociety.html") document.write('<script src="js/customer-account-link.js"><\/script>');
+if (URBAN_STOREFRONT_PAGES.includes(URBAN_CURRENT_PAGE)) document.write('<script src="js/customer-account-link.js"><\/script>');
 
 if (URBAN_BACKOFFICE_PAGES.includes(URBAN_CURRENT_PAGE)) {
     document.write('<script src="js/access.js"><\/script>');
