@@ -33,9 +33,22 @@ if (!document.querySelector('link[href="css/polish.css"]')) {
     document.head.appendChild(polish);
 }
 
+/* Menú unificado solo para el área administrativa */
+const URBAN_BACKOFFICE_PAGES = ["admin.html", "pos.html", "settings.html"];
+const URBAN_CURRENT_PAGE = (location.pathname.split("/").pop() || "").toLowerCase();
+
+if (URBAN_BACKOFFICE_PAGES.includes(URBAN_CURRENT_PAGE)) {
+    if (!document.querySelector('link[href="css/backoffice.css"]')) {
+        const backoffice = document.createElement("link");
+        backoffice.rel = "stylesheet";
+        backoffice.href = "css/backoffice.css";
+        document.head.appendChild(backoffice);
+    }
+}
+
 /*
-   admin.html conserva temporalmente una referencia antigua de SDK.
-   Si Supabase JS todavía no está presente, lo cargamos aquí.
+   Algunas páginas antiguas todavía cargan el SDK después.
+   Si Supabase JS no está presente, lo cargamos aquí.
 */
 if (!window.supabase) {
     document.write(
@@ -59,6 +72,8 @@ document.write(
     '<script src="js/my-orders.js"><\/script>'
 );
 
-document.write(
-    '<script src="js/admin-pos-link.js"><\/script>'
-);
+if (URBAN_BACKOFFICE_PAGES.includes(URBAN_CURRENT_PAGE)) {
+    document.write(
+        '<script src="js/backoffice-nav.js"><\/script>'
+    );
+}
