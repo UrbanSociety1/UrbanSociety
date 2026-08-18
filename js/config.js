@@ -23,14 +23,9 @@ const BACKENDLESS_CONFIG = {
 window.FORMSPREE_ENDPOINT =
     "https://formspree.io/f/xqpzyrde";
 
-/*
-   Avisos de pedidos.
-   Por ahora reutiliza el mismo endpoint de Formspree.
-   Si después creas un formulario exclusivo para pedidos,
-   solo cambia esta URL.
-*/
+/* Formulario exclusivo para avisos de pedidos */
 window.FORMSPREE_ORDERS_ENDPOINT =
-    "https://formspree.io/f/xqpzyrde";
+    "https://formspree.io/f/xppayvbo";
 
 /*
    Cargamos el módulo de avisos antes de app.js para que
