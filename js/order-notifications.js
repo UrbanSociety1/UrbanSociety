@@ -1,12 +1,14 @@
 /* =========================================================
    URBAN SOCIETY
    ORDER-NOTIFICATIONS.JS
-   Copia de pedidos por Formspree + diagnóstico Backendless
+   Pedidos Backendless + copia por Formspree + diagnóstico
 ========================================================= */
 
 (function () {
   if (window.__urbanOrderNotifierInstalled) return;
   window.__urbanOrderNotifierInstalled = true;
+
+  const BACKENDLESS_ORDERS_TABLE = "Pedidos";
 
   function obtenerEndpointPedidos() {
     return String(
@@ -66,7 +68,7 @@
 
     if (!endpointValido(endpoint)) {
       console.info(
-        "Pedido guardado en Backendless. No se envió copia por correo porque falta FORMSPREE_ORDERS_ENDPOINT/FORMSPREE_ENDPOINT."
+        "Pedido guardado en Backendless. No se envió copia por correo porque falta el endpoint de Formspree para pedidos."
       );
       return false;
     }
@@ -101,7 +103,7 @@
     data.set("estado", pedido?.status || "Pendiente");
     data.set("productos", resumenProductos(productos));
     data.set("total", formatearMXN(pedido?.total));
-    data.set("backendless", "Guardado correctamente en tabla Orders");
+    data.set("backendless", `Guardado correctamente en tabla ${BACKENDLESS_ORDERS_TABLE}`);
     data.set("origen", "Urban Society");
 
     try {
@@ -126,7 +128,7 @@
       }
 
       console.info(
-        `✓ Pedido #${pedidoId} guardado en Backendless y enviado a Formspree.`
+        `✓ Pedido #${pedidoId} guardado en Backendless (${BACKENDLESS_ORDERS_TABLE}) y enviado a Formspree.`
       );
 
       return true;
@@ -145,7 +147,7 @@
       !Backendless.Data ||
       typeof Backendless.Data.of !== "function"
     ) {
-      console.warn("No se pudo instalar el aviso de pedidos: Backendless.Data.of no está disponible.");
+      console.warn("No se pudo instalar el módulo de pedidos: Backendless.Data.of no está disponible.");
       return false;
     }
 
@@ -154,10 +156,24 @@
     const originalOf = Backendless.Data.of.bind(Backendless.Data);
 
     function urbanDataOf(tableName) {
-      const store = originalOf(tableName);
+      const nombreSolicitado = String(tableName || "");
+      const esTablaPedidos = ["orders", "pedidos"].includes(
+        nombreSolicitado.toLowerCase()
+      );
+
+      /*
+         El código histórico de la tienda usa "Orders", pero la tabla
+         existente en Backendless se llama "Pedidos". Toda operación de
+         lectura/escritura de Orders se redirige a Pedidos.
+      */
+      const nombreReal = esTablaPedidos
+        ? BACKENDLESS_ORDERS_TABLE
+        : tableName;
+
+      const store = originalOf(nombreReal);
 
       if (
-        String(tableName || "").toLowerCase() !== "orders" ||
+        !esTablaPedidos ||
         !store ||
         typeof store.save !== "function"
       ) {
@@ -167,9 +183,16 @@
       const originalSave = store.save.bind(store);
 
       store.save = async function (pedido) {
+        console.info(`Guardando pedido en Backendless → ${BACKENDLESS_ORDERS_TABLE}...`);
+
         const guardado = await originalSave(pedido);
 
-        // No bloqueamos la compra si el correo falla.
+        console.info(
+          `✓ Pedido guardado en ${BACKENDLESS_ORDERS_TABLE}:`,
+          guardado?.objectId || guardado
+        );
+
+        // El correo es secundario: un fallo de Formspree no invalida el pedido.
         enviarCopiaPedidoFormspree(pedido, guardado);
 
         return guardado;
@@ -181,7 +204,9 @@
     urbanDataOf.__urbanOrdersPatched = true;
     Backendless.Data.of = urbanDataOf;
 
-    console.info("Avisos de pedidos Urban Society activados.");
+    console.info(
+      `Avisos de pedidos Urban Society activados. Orders → ${BACKENDLESS_ORDERS_TABLE}.`
+    );
     return true;
   }
 
@@ -191,7 +216,9 @@
       configuracion: typeof BACKENDLESS_CONFIG !== "undefined",
       inicializado: false,
       products_lectura: false,
-      orders_lectura: false,
+      pedidos_lectura: false,
+      pedidos_escritura: "No probada",
+      tabla_pedidos: BACKENDLESS_ORDERS_TABLE,
       sesion: "No comprobada"
     };
 
@@ -218,14 +245,14 @@
       }
 
       try {
-        const queryOrders = Backendless.DataQueryBuilder
+        const queryPedidos = Backendless.DataQueryBuilder
           .create()
           .setPageSize(1);
 
-        await Backendless.Data.of("Orders").find(queryOrders);
-        resultado.orders_lectura = true;
+        await Backendless.Data.of(BACKENDLESS_ORDERS_TABLE).find(queryPedidos);
+        resultado.pedidos_lectura = true;
       } catch (error) {
-        resultado.orders_error = error.message || String(error);
+        resultado.pedidos_error = error.message || String(error);
       }
 
       try {
@@ -248,4 +275,5 @@
 
   window.enviarCopiaPedidoFormspree = enviarCopiaPedidoFormspree;
   window.verificarBackendlessUrban = verificarBackendlessUrban;
+  window.URBAN_BACKENDLESS_ORDERS_TABLE = BACKENDLESS_ORDERS_TABLE;
 })();
