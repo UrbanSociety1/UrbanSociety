@@ -8,6 +8,45 @@
   if (window.__urbanSecureCheckoutInstalled) return;
   window.__urbanSecureCheckoutInstalled = true;
 
+  async function guardarPedidoSinToken(pedido) {
+    if (
+      typeof BACKENDLESS_CONFIG === "undefined" ||
+      !BACKENDLESS_CONFIG.SUBDOMAIN
+    ) {
+      throw new Error("Falta la configuración del endpoint de Backendless.");
+    }
+
+    const endpoint =
+      `https://${BACKENDLESS_CONFIG.SUBDOMAIN}/api/data/Orders`;
+
+    const respuesta = await fetch(endpoint, {
+      method: "POST",
+      credentials: "omit",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json"
+      },
+      body: JSON.stringify(pedido)
+    });
+
+    let data = null;
+
+    try {
+      data = await respuesta.json();
+    } catch (_) {
+      // Si Backendless no devuelve JSON, manejamos el error abajo.
+    }
+
+    if (!respuesta.ok) {
+      throw new Error(
+        data?.message ||
+        `Backendless respondió ${respuesta.status}`
+      );
+    }
+
+    return data || {};
+  }
+
   async function crearPedidoSeguro(event) {
     event.preventDefault();
     event.stopImmediatePropagation();
@@ -75,14 +114,22 @@
             : null
       };
 
-      const guardado = await Backendless.Data.of("Orders").save(pedido);
+      /*
+         Guardamos Orders sin enviar user-token.
+
+         Así, el afterCreate de Backendless puede actualizar Products
+         únicamente con el rol ServerCodeUser, incluso cuando el comprador
+         tenga una sesión iniciada. El cliente sigue sin permiso UPDATE.
+      */
+      const guardado = await guardarPedidoSinToken(pedido);
 
       /*
-         IMPORTANTE:
-         El navegador NO actualiza Products. Eso mantiene cerrado UPDATE
-         para clientes y evita que alguien manipule el inventario.
-         El descuento de stock debe hacerse desde Backendless Cloud Code.
+         Como este guardado no pasa por Backendless.Data.of(...).save(),
+         enviamos explícitamente la copia del pedido a Formspree.
       */
+      if (typeof window.enviarCopiaPedidoFormspree === "function") {
+        window.enviarCopiaPedidoFormspree(pedido, guardado);
+      }
 
       carritoUrban = [];
       guardarCarritoLocal();
