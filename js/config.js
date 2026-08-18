@@ -9,7 +9,7 @@ const SUPABASE_CONFIG = {
 };
 
 /*
-   Compatibilidad temporal con módulos que todavía llaman iniciarBackendless().
+   Compatibilidad temporal con módulos antiguos del frontend.
    No contiene credenciales privadas ni conecta con Backendless.
 */
 const BACKENDLESS_CONFIG = {
@@ -21,14 +21,21 @@ const BACKENDLESS_CONFIG = {
 window.FORMSPREE_ENDPOINT =
     "https://formspree.io/f/xqpzyrde";
 
-/* Formulario exclusivo para avisos de pedidos */
+/* Avisos de pedidos */
 window.FORMSPREE_ORDERS_ENDPOINT =
     "https://formspree.io/f/xppayvbo";
 
+/* Capa visual final */
+if (!document.querySelector('link[href="css/polish.css"]')) {
+    const polish = document.createElement("link");
+    polish.rel = "stylesheet";
+    polish.href = "css/polish.css";
+    document.head.appendChild(polish);
+}
+
 /*
-   admin.html todavía conserva el antiguo CDN de Backendless por compatibilidad
-   visual. Si Supabase JS no está presente, lo cargamos aquí antes de la capa
-   nueva. UrbanSociety.html ya lo carga directamente.
+   admin.html conserva temporalmente una referencia antigua de SDK.
+   Si Supabase JS todavía no está presente, lo cargamos aquí.
 */
 if (!window.supabase) {
     document.write(
