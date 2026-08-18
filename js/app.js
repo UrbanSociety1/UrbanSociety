@@ -3,9 +3,7 @@
    APP.JS
    Catálogo, carrito, buscador y UI de checkout.
 
-   IMPORTANTE:
-   La creación de pedidos NO vive aquí. El formulario de checkout
-   es procesado por el módulo de checkout seguro cargado desde config.js.
+   La creación final del pedido vive en checkout-secure.js.
 ========================================================= */
 
 let productosUrban = [];
@@ -30,37 +28,57 @@ async function cargarProductos() {
   const container = document.getElementById("products-grid");
   if (!container) return;
 
-  container.innerHTML = '<div class="loading-products">Cargando productos...</div>';
+  container.innerHTML = `
+    <div class="loading-products">
+      <span class="loading-dot"></span>
+      <strong>Cargando productos...</strong>
+    </div>
+  `;
 
   try {
     const query = Backendless.DataQueryBuilder
       .create()
       .setSortBy(["created DESC"]);
 
-    productosUrban = await Backendless.Data.of(PRODUCTS_TABLE).find(query) || [];
+    const encontrados = await Backendless.Data.of(PRODUCTS_TABLE).find(query) || [];
+
+    // Incluso la cuenta propietaria ve el escaparate como lo vería un cliente.
+    productosUrban = encontrados.filter(producto => producto.active !== false);
+
+    sincronizarCarritoConCatalogo();
+    actualizarMetaCatalogo(productosUrban.length, productosUrban.length);
     mostrarProductos(productosUrban);
   } catch (error) {
     console.error("Error cargando productos:", error);
+    actualizarMetaCatalogo(0, 0);
     container.innerHTML = `
       <div class="admin-error">
-        <h3>No se pudieron cargar los productos</h3>
-        <p>Revisa la conexión con Backendless y que exista la tabla Products.</p>
+        <h3>No pudimos cargar el catálogo</h3>
+        <p>Comprueba tu conexión e intenta actualizar la página.</p>
+        <button type="button" class="btn btn-secondary" onclick="cargarProductos()">REINTENTAR</button>
       </div>
     `;
   }
 }
 
-function mostrarProductos(productos) {
+function mostrarProductos(productos, filtrando = false) {
   const container = document.getElementById("products-grid");
   if (!container) return;
 
   if (!productos.length) {
-    container.innerHTML = `
-      <div class="empty-products">
-        <h3>Próximamente</h3>
-        <p>Todavía no hay productos disponibles.</p>
-      </div>
-    `;
+    container.innerHTML = filtrando
+      ? `
+        <div class="empty-products">
+          <h3>Sin coincidencias</h3>
+          <p>Prueba otra búsqueda o cambia la categoría.</p>
+        </div>
+      `
+      : `
+        <div class="empty-products">
+          <h3>Próximamente</h3>
+          <p>Todavía no hay productos disponibles.</p>
+        </div>
+      `;
     return;
   }
 
@@ -76,10 +94,30 @@ function crearTarjetaProducto(producto) {
   const precio = Number(producto.price || 0);
   const stock = Number(producto.stock || 0);
   const disponible = stock > 0;
+  const tallas = normalizarTallas(producto.sizes);
+  const necesitaTalla = tallas.length > 0;
+
+  const stockTexto = stock <= 0
+    ? "Agotado"
+    : stock <= 5
+      ? `Últimas ${stock}`
+      : "Disponible";
+
+  const tallasHtml = tallas.length
+    ? `<div class="product-sizes" aria-label="Tallas disponibles">
+        ${tallas.slice(0, 4).map(talla => `<span>${escaparHTML(talla)}</span>`).join("")}
+        ${tallas.length > 4 ? `<span>+${tallas.length - 4}</span>` : ""}
+      </div>`
+    : "";
 
   return `
     <article class="product-card">
-      <div class="product-image-container" onclick="abrirProducto('${id}')">
+      <button
+        type="button"
+        class="product-image-container"
+        onclick="abrirProducto('${id}')"
+        aria-label="Ver ${nombre}"
+      >
         <img
           class="product-image"
           src="${imagen}"
@@ -87,15 +125,16 @@ function crearTarjetaProducto(producto) {
           loading="lazy"
           onerror="this.src='images/Logo Urban.png'"
         >
-        <span class="product-stock ${disponible ? "available" : ""}">
-          ${disponible ? `Stock: ${stock}` : "Agotado"}
+        <span class="product-stock ${disponible ? "available" : "sold-out"}">
+          ${stockTexto}
         </span>
-      </div>
+      </button>
 
       <div class="product-info">
         <span class="product-category">${categoria}</span>
         <h3>${nombre}</h3>
         <p class="product-description">${descripcion}</p>
+        ${tallasHtml}
 
         <div class="product-bottom">
           <strong class="product-price">${formatearPrecio(precio)}</strong>
@@ -103,9 +142,9 @@ function crearTarjetaProducto(producto) {
             type="button"
             class="add-cart-button"
             ${disponible ? "" : "disabled"}
-            onclick="agregarAlCarrito('${id}')"
+            onclick="${necesitaTalla ? `abrirProducto('${id}')` : `agregarAlCarrito('${id}')`}"
           >
-            ${disponible ? "Agregar" : "Agotado"}
+            ${!disponible ? "Agotado" : necesitaTalla ? "Elegir talla" : "Agregar"}
           </button>
         </div>
       </div>
@@ -114,7 +153,7 @@ function crearTarjetaProducto(producto) {
 }
 
 function abrirProducto(id) {
-  const producto = productosUrban.find(item => item.objectId === id);
+  const producto = productosUrban.find(item => item.objectId === id && item.active !== false);
   if (!producto) return;
 
   const modal = document.getElementById("product-modal");
@@ -127,6 +166,7 @@ function abrirProducto(id) {
   const descripcion = document.getElementById("modal-description");
   const boton = document.getElementById("modal-add-button");
   const stock = Number(producto.stock || 0);
+  const tallas = normalizarTallas(producto.sizes);
 
   if (imagen) {
     imagen.src = producto.image || producto.imageUrl || "images/Logo Urban.png";
@@ -141,11 +181,48 @@ function abrirProducto(id) {
   if (precio) precio.textContent = formatearPrecio(producto.price);
   if (descripcion) descripcion.textContent = producto.description || "Producto Urban Society.";
 
+  let sizeField = document.getElementById("modal-size-field");
+  if (!sizeField && boton?.parentElement) {
+    sizeField = document.createElement("div");
+    sizeField.id = "modal-size-field";
+    sizeField.className = "modal-size-field";
+    boton.parentElement.insertBefore(sizeField, boton);
+  }
+
+  if (sizeField) {
+    if (tallas.length) {
+      sizeField.hidden = false;
+      sizeField.innerHTML = `
+        <label for="modal-size-select">Talla</label>
+        <select id="modal-size-select">
+          <option value="">Selecciona tu talla</option>
+          ${tallas.map(talla => `<option value="${escaparHTML(talla)}">${escaparHTML(talla)}</option>`).join("")}
+        </select>
+      `;
+    } else {
+      sizeField.hidden = true;
+      sizeField.innerHTML = "";
+    }
+  }
+
   if (boton) {
     boton.disabled = stock <= 0;
-    boton.textContent = stock > 0 ? "Agregar al carrito" : "Agotado";
+    boton.textContent = stock > 0
+      ? tallas.length ? "Elegir talla y agregar" : "Agregar al carrito"
+      : "Agotado";
+
     boton.onclick = function () {
-      agregarAlCarrito(producto.objectId);
+      const talla = tallas.length
+        ? document.getElementById("modal-size-select")?.value || ""
+        : "";
+
+      if (tallas.length && !talla) {
+        mostrarNotificacion("Selecciona una talla antes de agregar.");
+        document.getElementById("modal-size-select")?.focus();
+        return;
+      }
+
+      agregarAlCarrito(producto.objectId, talla);
       cerrarModalProducto();
     };
   }
@@ -177,11 +254,37 @@ function guardarCarritoLocal() {
   localStorage.setItem("urbanSocietyCart", JSON.stringify(carritoUrban));
 }
 
-function agregarAlCarrito(id) {
-  const producto = productosUrban.find(item => item.objectId === id);
+function sincronizarCarritoConCatalogo() {
+  const anterior = JSON.stringify(carritoUrban);
+
+  carritoUrban = carritoUrban
+    .map(item => {
+      const producto = productosUrban.find(p => p.objectId === item.id && p.active !== false);
+      if (!producto) return null;
+
+      const stock = Number(producto.stock || 0);
+      if (stock <= 0) return null;
+
+      const tallas = normalizarTallas(producto.sizes);
+      const talla = String(item.size || "").trim();
+      if (tallas.length && !tallas.includes(talla)) return null;
+
+      const quantity = Math.min(Math.max(Number(item.quantity || 1), 1), stock);
+      return { id: item.id, quantity, size: talla };
+    })
+    .filter(Boolean);
+
+  if (JSON.stringify(carritoUrban) !== anterior) {
+    guardarCarritoLocal();
+    actualizarCarritoUI();
+  }
+}
+
+function agregarAlCarrito(id, talla = "") {
+  const producto = productosUrban.find(item => item.objectId === id && item.active !== false);
 
   if (!producto) {
-    mostrarNotificacion("Producto no encontrado.");
+    mostrarNotificacion("Producto no disponible.");
     return;
   }
 
@@ -191,7 +294,18 @@ function agregarAlCarrito(id) {
     return;
   }
 
-  const existente = carritoUrban.find(item => item.id === id);
+  const tallas = normalizarTallas(producto.sizes);
+  const tallaNormalizada = String(talla || "").trim();
+
+  if (tallas.length && !tallas.includes(tallaNormalizada)) {
+    mostrarNotificacion("Selecciona una talla válida.");
+    abrirProducto(id);
+    return;
+  }
+
+  const existente = carritoUrban.find(item =>
+    item.id === id && String(item.size || "") === tallaNormalizada
+  );
 
   if (existente) {
     if (Number(existente.quantity || 0) >= stock) {
@@ -200,24 +314,31 @@ function agregarAlCarrito(id) {
     }
     existente.quantity = Number(existente.quantity || 0) + 1;
   } else {
-    carritoUrban.push({ id, quantity: 1 });
+    carritoUrban.push({ id, quantity: 1, size: tallaNormalizada });
   }
 
   guardarCarritoLocal();
   actualizarCarritoUI();
-  mostrarNotificacion("Producto agregado al carrito.");
+  mostrarNotificacion(
+    tallaNormalizada
+      ? `Producto agregado · Talla ${tallaNormalizada}`
+      : "Producto agregado al carrito."
+  );
 }
 
-function cambiarCantidad(id, cantidad) {
+function cambiarCantidad(id, tallaCodificada, cantidad) {
+  const talla = decodeURIComponent(String(tallaCodificada || ""));
   const producto = productosUrban.find(item => item.objectId === id);
-  const item = carritoUrban.find(item => item.id === id);
+  const item = carritoUrban.find(item =>
+    item.id === id && String(item.size || "") === talla
+  );
   if (!producto || !item) return;
 
   const stock = Number(producto.stock || 0);
   const nuevaCantidad = Number(cantidad || 0);
 
   if (nuevaCantidad <= 0) {
-    eliminarDelCarrito(id);
+    eliminarDelCarrito(id, tallaCodificada);
     return;
   }
 
@@ -232,8 +353,11 @@ function cambiarCantidad(id, cantidad) {
   mostrarCarrito();
 }
 
-function eliminarDelCarrito(id) {
-  carritoUrban = carritoUrban.filter(item => item.id !== id);
+function eliminarDelCarrito(id, tallaCodificada = "") {
+  const talla = decodeURIComponent(String(tallaCodificada || ""));
+  carritoUrban = carritoUrban.filter(item => !(
+    item.id === id && String(item.size || "") === talla
+  ));
   guardarCarritoLocal();
   actualizarCarritoUI();
   mostrarCarrito();
@@ -243,10 +367,13 @@ function actualizarCarritoUI() {
   const contador = document.getElementById("cart-count");
   if (!contador) return;
 
-  contador.textContent = carritoUrban.reduce(
+  const cantidad = carritoUrban.reduce(
     (total, item) => total + Number(item.quantity || 0),
     0
   );
+
+  contador.textContent = cantidad;
+  contador.hidden = cantidad <= 0;
 }
 
 function abrirCarrito() {
@@ -261,19 +388,22 @@ function cerrarCarrito() {
 function mostrarCarrito() {
   const container = document.getElementById("cart-items");
   const totalElement = document.getElementById("cart-total");
+  const checkoutButton = document.getElementById("checkout-button");
   if (!container) return;
 
   if (!carritoUrban.length) {
     container.innerHTML = `
       <div class="empty-cart">
         <h3>Tu carrito está vacío</h3>
-        <p>Agrega algunos productos.</p>
+        <p>Encuentra algo que vaya con tu estilo.</p>
       </div>
     `;
     if (totalElement) totalElement.textContent = "$0.00 MXN";
+    if (checkoutButton) checkoutButton.disabled = true;
     return;
   }
 
+  if (checkoutButton) checkoutButton.disabled = false;
   let total = 0;
 
   container.innerHTML = carritoUrban.map(item => {
@@ -283,6 +413,8 @@ function mostrarCarrito() {
     const precio = Number(producto.price || 0);
     const cantidad = Number(item.quantity || 0);
     const subtotal = precio * cantidad;
+    const talla = String(item.size || "");
+    const tallaCodificada = encodeURIComponent(talla);
     total += subtotal;
 
     return `
@@ -295,11 +427,12 @@ function mostrarCarrito() {
 
         <div class="cart-item-info">
           <strong>${escaparHTML(producto.name || "Producto")}</strong>
+          ${talla ? `<span class="cart-size">Talla ${escaparHTML(talla)}</span>` : ""}
           <span>${formatearPrecio(precio)}</span>
           <div class="quantity-controls">
-            <button type="button" onclick="cambiarCantidad('${item.id}', ${cantidad - 1})">−</button>
+            <button type="button" aria-label="Restar unidad" onclick="cambiarCantidad('${item.id}', '${tallaCodificada}', ${cantidad - 1})">−</button>
             <strong>${cantidad}</strong>
-            <button type="button" onclick="cambiarCantidad('${item.id}', ${cantidad + 1})">+</button>
+            <button type="button" aria-label="Agregar unidad" onclick="cambiarCantidad('${item.id}', '${tallaCodificada}', ${cantidad + 1})">+</button>
           </div>
         </div>
 
@@ -308,7 +441,8 @@ function mostrarCarrito() {
           <button
             type="button"
             class="remove-cart"
-            onclick="eliminarDelCarrito('${item.id}')"
+            onclick="eliminarDelCarrito('${item.id}', '${tallaCodificada}')"
+            aria-label="Eliminar ${escaparHTML(producto.name || "producto")}"
             title="Eliminar"
           >×</button>
         </div>
@@ -381,19 +515,53 @@ function filtrarProductos() {
     const nombre = String(producto.name || "").toLowerCase();
     const descripcion = String(producto.description || "").toLowerCase();
     const categoria = String(producto.category || "");
+    const tallas = String(producto.sizes || "").toLowerCase();
 
-    const coincideTexto = !search || nombre.includes(search) || descripcion.includes(search);
+    const coincideTexto = !search ||
+      nombre.includes(search) ||
+      descripcion.includes(search) ||
+      categoria.toLowerCase().includes(search) ||
+      tallas.includes(search);
+
     const coincideCategoria = !category || categoria === category;
     return coincideTexto && coincideCategoria;
   });
 
-  mostrarProductos(filtrados);
+  actualizarMetaCatalogo(filtrados.length, productosUrban.length);
+  mostrarProductos(filtrados, Boolean(search || category));
+}
+
+function actualizarMetaCatalogo(visibles, total) {
+  const tools = document.querySelector(".catalog-tools");
+  if (!tools) return;
+
+  let meta = document.getElementById("catalog-meta");
+  if (!meta) {
+    meta = document.createElement("div");
+    meta.id = "catalog-meta";
+    meta.className = "catalog-meta";
+    tools.insertAdjacentElement("afterend", meta);
+  }
+
+  meta.innerHTML = `
+    <span><strong>${Number(visibles || 0)}</strong> ${Number(visibles) === 1 ? "producto" : "productos"}</span>
+    ${visibles !== total ? `<span>de ${Number(total || 0)} disponibles</span>` : '<span>Stock actualizado</span>'}
+  `;
 }
 
 
 /* =========================================================
    UTILIDADES
 ========================================================= */
+
+function normalizarTallas(value) {
+  return [...new Set(
+    String(value || "")
+      .split(/[,;|]+/)
+      .map(talla => talla.trim())
+      .filter(Boolean)
+  )];
+}
 
 function formatearPrecio(precio) {
   return new Intl.NumberFormat("es-MX", {
@@ -421,9 +589,12 @@ function mostrarNotificacion(mensaje) {
   }
 
   notification.textContent = mensaje;
+  notification.classList.remove("show");
+  void notification.offsetWidth;
   notification.classList.add("show");
 
-  setTimeout(() => {
+  clearTimeout(window.__urbanNotificationTimer);
+  window.__urbanNotificationTimer = setTimeout(() => {
     notification.classList.remove("show");
   }, 2500);
 }
@@ -457,4 +628,5 @@ window.mostrarCarrito = mostrarCarrito;
 window.obtenerTotalCarrito = obtenerTotalCarrito;
 window.formatearPrecio = formatearPrecio;
 window.escaparHTML = escaparHTML;
+window.normalizarTallas = normalizarTallas;
 window.mostrarNotificacion = mostrarNotificacion;
