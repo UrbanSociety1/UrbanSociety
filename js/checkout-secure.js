@@ -1,58 +1,27 @@
 /* =========================================================
    URBAN SOCIETY
-   CHECKOUT SEGURO
-   El cliente crea pedidos, pero nunca modifica Products.
+   CHECKOUT SEGURO CON SUPABASE
+
+   El navegador solo envía IDs, cantidades y datos de entrega.
+   La función SQL create_order toma precios reales, valida stock,
+   descuenta inventario y crea el pedido en una sola transacción.
 ========================================================= */
 
 (function () {
   if (window.__urbanSecureCheckoutInstalled) return;
   window.__urbanSecureCheckoutInstalled = true;
 
-  async function guardarPedidoSinToken(pedido) {
-    if (
-      typeof BACKENDLESS_CONFIG === "undefined" ||
-      !BACKENDLESS_CONFIG.SUBDOMAIN
-    ) {
-      throw new Error("Falta la configuración del endpoint de Backendless.");
-    }
-
-    const endpoint =
-      `https://${BACKENDLESS_CONFIG.SUBDOMAIN}/api/data/Orders`;
-
-    const respuesta = await fetch(endpoint, {
-      method: "POST",
-      credentials: "omit",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json"
-      },
-      body: JSON.stringify(pedido)
-    });
-
-    let data = null;
-
-    try {
-      data = await respuesta.json();
-    } catch (_) {
-      // Si Backendless no devuelve JSON, manejamos el error abajo.
-    }
-
-    if (!respuesta.ok) {
-      throw new Error(
-        data?.message ||
-        `Backendless respondió ${respuesta.status}`
-      );
-    }
-
-    return data || {};
-  }
-
   async function crearPedidoSeguro(event) {
     event.preventDefault();
     event.stopImmediatePropagation();
 
-    if (!carritoUrban.length) {
+    if (!Array.isArray(carritoUrban) || !carritoUrban.length) {
       alert("El carrito está vacío.");
+      return;
+    }
+
+    if (!window.urbanSupabase) {
+      alert("No se pudo conectar con la tienda. Recarga la página.");
       return;
     }
 
@@ -60,75 +29,60 @@
     const email = document.getElementById("checkout-email")?.value.trim();
     const phone = document.getElementById("checkout-phone")?.value.trim();
     const address = document.getElementById("checkout-address")?.value.trim();
-    const payment = document.getElementById("checkout-payment")?.value;
+    const paymentMethod = document.getElementById("checkout-payment")?.value;
     const submit = document.getElementById("place-order-button");
 
-    if (!nombre || !email || !phone || !address || !payment) {
+    if (!nombre || !email || !phone || !address || !paymentMethod) {
       alert("Completa todos los datos del pedido.");
+      return;
+    }
+
+    const items = carritoUrban.map(item => ({
+      product_id: String(item.id || "").trim(),
+      quantity: Number(item.quantity || 0)
+    }));
+
+    if (
+      items.some(item =>
+        !item.product_id ||
+        !Number.isInteger(item.quantity) ||
+        item.quantity <= 0
+      )
+    ) {
+      alert("El carrito contiene datos inválidos. Recarga e intenta nuevamente.");
       return;
     }
 
     if (submit) {
       submit.disabled = true;
-      submit.textContent = "ENVIANDO PEDIDO...";
+      submit.textContent = "PROCESANDO PEDIDO...";
     }
 
     try {
-      const productosPedido = [];
-
-      for (const item of carritoUrban) {
-        const producto = productosUrban.find(p => p.objectId === item.id);
-
-        if (!producto) {
-          throw new Error("Uno de los productos ya no existe.");
-        }
-
-        const stock = Number(producto.stock || 0);
-        const cantidad = Number(item.quantity || 0);
-
-        if (cantidad > stock) {
-          throw new Error(`No hay suficiente stock de ${producto.name}.`);
-        }
-
-        productosPedido.push({
-          productId: producto.objectId,
-          name: producto.name,
-          price: Number(producto.price || 0),
-          quantity: cantidad,
-          subtotal: Number(producto.price || 0) * cantidad
-        });
-      }
-
-      const pedido = {
+      const payload = {
         customerName: nombre,
         customerEmail: email,
         customerPhone: phone,
-        address: address,
-        paymentMethod: payment,
-        products: JSON.stringify(productosPedido),
-        total: obtenerTotalCarrito(),
-        status: "Pendiente",
-        userId:
-          typeof usuarioActual !== "undefined" && usuarioActual
-            ? usuarioActual.objectId
-            : null
+        address,
+        paymentMethod,
+        items
       };
 
-      /*
-         Guardamos Orders sin enviar user-token.
+      const { data, error } = await window.urbanSupabase.rpc(
+        "create_order",
+        { payload }
+      );
 
-         Así, el afterCreate de Backendless puede actualizar Products
-         únicamente con el rol ServerCodeUser, incluso cuando el comprador
-         tenga una sesión iniciada. El cliente sigue sin permiso UPDATE.
-      */
-      const guardado = await guardarPedidoSinToken(pedido);
+      if (error) throw error;
 
-      /*
-         Como este guardado no pasa por Backendless.Data.of(...).save(),
-         enviamos explícitamente la copia del pedido a Formspree.
-      */
+      const pedido = data || {};
+
+      if (!pedido.objectId && !pedido.id) {
+        throw new Error("Supabase no devolvió el número de pedido.");
+      }
+
       if (typeof window.enviarCopiaPedidoFormspree === "function") {
-        window.enviarCopiaPedidoFormspree(pedido, guardado);
+        window.enviarCopiaPedidoFormspree(pedido, pedido);
       }
 
       carritoUrban = [];
@@ -136,21 +90,29 @@
       actualizarCarritoUI();
       cerrarCheckout();
 
-      const form = document.getElementById("checkout-form");
-      if (form) form.reset();
+      document.getElementById("checkout-form")?.reset();
+
+      const orderId = pedido.objectId || pedido.id;
+      const total = Number(pedido.total || 0);
 
       alert(
         "¡Pedido recibido correctamente!\n\n" +
-        "Número de pedido: " +
-        (guardado?.objectId || "Generado")
+        "Número de pedido: " + orderId +
+        (Number.isFinite(total) && total > 0
+          ? "\nTotal confirmado: " +
+            new Intl.NumberFormat("es-MX", {
+              style: "currency",
+              currency: "MXN"
+            }).format(total)
+          : "")
       );
 
       await cargarProductos();
     } catch (error) {
-      console.error("Error creando pedido seguro:", error);
+      console.error("Error creando pedido en Supabase:", error);
       alert(
         "No se pudo realizar el pedido.\n\n" +
-        (error.message || "Error desconocido.")
+        (error?.message || "Error desconocido.")
       );
     } finally {
       if (submit) {
@@ -163,12 +125,6 @@
   document.addEventListener("DOMContentLoaded", function () {
     const form = document.getElementById("checkout-form");
     if (!form) return;
-
-    /*
-       Este listener se registra antes que el de app.js y corta la
-       propagación para evitar que el checkout antiguo intente modificar
-       Products desde el navegador.
-    */
     form.addEventListener("submit", crearPedidoSeguro);
   });
 
