@@ -1,19 +1,14 @@
 /* =========================================================
    URBAN SOCIETY
-   MIS PEDIDOS
-   Los pedidos se consultan mediante MyOrdersService.
+   MIS PEDIDOS - SUPABASE
 ========================================================= */
 
 (function () {
   if (window.__urbanMyOrdersInstalled) return;
   window.__urbanMyOrdersInstalled = true;
 
-  const MY_ORDERS_SERVICE = "MyOrdersService";
-  const MY_ORDERS_ROUTE = "orders";
-
   function cargarEstilosMisPedidos() {
     if (document.querySelector('link[data-urban-my-orders]')) return;
-
     const link = document.createElement("link");
     link.rel = "stylesheet";
     link.href = "css/my-orders.css";
@@ -22,10 +17,7 @@
   }
 
   function escapar(value) {
-    if (typeof window.escapeHTML === "function") {
-      return window.escapeHTML(value);
-    }
-
+    if (typeof window.escapeHTML === "function") return window.escapeHTML(value);
     return String(value ?? "")
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
@@ -43,25 +35,12 @@
 
   function formatearFecha(value) {
     if (!value) return "Fecha no disponible";
-
-    const fecha = new Date(Number(value) || value);
+    const fecha = new Date(value);
     if (Number.isNaN(fecha.getTime())) return "Fecha no disponible";
-
     return new Intl.DateTimeFormat("es-MX", {
       dateStyle: "medium",
       timeStyle: "short"
     }).format(fecha);
-  }
-
-  function parsearProductos(value) {
-    if (Array.isArray(value)) return value;
-
-    try {
-      const parsed = JSON.parse(value || "[]");
-      return Array.isArray(parsed) ? parsed : [];
-    } catch (_) {
-      return [];
-    }
   }
 
   function asegurarModal() {
@@ -74,7 +53,6 @@
     modal.setAttribute("role", "dialog");
     modal.setAttribute("aria-modal", "true");
     modal.setAttribute("aria-labelledby", "my-orders-title");
-
     modal.innerHTML = `
       <div class="modal-card my-orders-card">
         <button type="button" class="modal-close" onclick="cerrarMisPedidos()" aria-label="Cerrar">×</button>
@@ -101,23 +79,26 @@
   }
 
   function tarjetaPedido(pedido) {
-    const productos = parsearProductos(pedido.products);
+    const productos = Array.isArray(pedido.products) ? pedido.products : [];
     const estado = escapar(pedido.status || "Pendiente");
-    const id = escapar(pedido.objectId || "Sin número");
-
-    const detalleProductos = productos.length
-      ? productos.map(producto => {
-          const cantidad = Number(producto.quantity || 0);
-          const nombre = escapar(producto.name || "Producto");
-          return `<li><span>${cantidad} × ${nombre}</span><strong>${formatearPrecio(producto.subtotal || (Number(producto.price || 0) * cantidad))}</strong></li>`;
-        }).join("")
-      : '<li><span>Sin detalle de productos</span></li>';
-
+    const id = escapar(pedido.id || "Sin número");
     const estadoClase = String(pedido.status || "Pendiente")
       .toLowerCase()
       .normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "")
       .replace(/[^a-z0-9]+/g, "-");
+
+    const detalleProductos = productos.length
+      ? productos.map(producto => {
+          const cantidad = Number(producto.quantity || 0);
+          const nombre = escapar(producto.name || "Producto");
+          const subtotal = Number(
+            producto.subtotal ||
+            Number(producto.price || 0) * cantidad
+          );
+          return `<li><span>${cantidad} × ${nombre}</span><strong>${formatearPrecio(subtotal)}</strong></li>`;
+        }).join("")
+      : '<li><span>Sin detalle de productos</span></li>';
 
     return `
       <article class="my-order-card">
@@ -128,79 +109,24 @@
           </div>
           <span class="my-order-status status-${estadoClase}">${estado}</span>
         </div>
-
         <div class="my-order-meta">
-          <span>${escapar(formatearFecha(pedido.created))}</span>
+          <span>${escapar(formatearFecha(pedido.created_at))}</span>
           <strong>${formatearPrecio(pedido.total)}</strong>
         </div>
-
         <ul class="my-order-products">${detalleProductos}</ul>
-
         <div class="my-order-footer">
-          <span>Pago: ${escapar(pedido.paymentMethod || "Por acordar")}</span>
+          <span>Pago: ${escapar(pedido.payment_method || "Por acordar")}</span>
           <span>${escapar(pedido.address || "")}</span>
         </div>
       </article>
     `;
   }
 
-  async function obtenerPedidosDesdeServicioSeguro() {
-    if (typeof Backendless === "undefined") {
-      throw new Error("Backendless no está disponible.");
-    }
-
-    if (
-      typeof BACKENDLESS_CONFIG === "undefined" ||
-      !BACKENDLESS_CONFIG.SUBDOMAIN
-    ) {
-      throw new Error("Falta la configuración del endpoint de Backendless.");
-    }
-
-    const userToken = await Backendless.UserService.getCurrentUserToken();
-
-    if (!userToken) {
-      throw new Error("Tu sesión expiró. Inicia sesión nuevamente.");
-    }
-
-    const endpoint =
-      `https://${BACKENDLESS_CONFIG.SUBDOMAIN}/api/services/${MY_ORDERS_SERVICE}/${MY_ORDERS_ROUTE}`;
-
-    const respuesta = await fetch(endpoint, {
-      method: "GET",
-      credentials: "omit",
-      headers: {
-        Accept: "application/json",
-        "user-token": userToken
-      }
-    });
-
-    let data = null;
-
-    try {
-      data = await respuesta.json();
-    } catch (_) {
-      // El manejo de error se realiza abajo.
-    }
-
-    if (!respuesta.ok) {
-      throw new Error(
-        data?.message ||
-        data?.error ||
-        `Backendless respondió ${respuesta.status}`
-      );
-    }
-
-    if (Array.isArray(data)) return data;
-    if (Array.isArray(data?.result)) return data.result;
-
-    return [];
-  }
-
   async function cargarMisPedidos() {
     const contenido = document.getElementById("my-orders-content");
     if (!contenido) return;
 
-    if (typeof usuarioActual === "undefined" || !usuarioActual) {
+    if (!usuarioActual || !window.urbanSupabase) {
       contenido.innerHTML = '<div class="my-orders-empty"><h3>Inicia sesión</h3><p>Necesitas iniciar sesión para consultar tus pedidos.</p></div>';
       return;
     }
@@ -208,7 +134,15 @@
     contenido.innerHTML = '<div class="my-orders-loading">Cargando pedidos...</div>';
 
     try {
-      const pedidos = await obtenerPedidosDesdeServicioSeguro();
+      const { data, error } = await window.urbanSupabase
+        .from("orders")
+        .select("*")
+        .eq("user_id", usuarioActual.objectId)
+        .order("created_at", { ascending: false })
+        .limit(50);
+
+      if (error) throw error;
+      const pedidos = data || [];
 
       if (!pedidos.length) {
         contenido.innerHTML = `
@@ -234,12 +168,10 @@
 
   async function mostrarMisPedidos() {
     document.getElementById("account-menu")?.remove();
-
-    if (typeof usuarioActual === "undefined" || !usuarioActual) {
+    if (!usuarioActual) {
       if (typeof window.mostrarLogin === "function") window.mostrarLogin();
       return;
     }
-
     const modal = asegurarModal();
     modal.classList.add("active");
     await cargarMisPedidos();
@@ -255,7 +187,6 @@
 
     function menuConPedidos() {
       original();
-
       const menu = document.getElementById("account-menu");
       if (!menu || document.getElementById("my-orders-menu-button")) return;
 
