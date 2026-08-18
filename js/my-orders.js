@@ -1,13 +1,15 @@
 /* =========================================================
    URBAN SOCIETY
    MIS PEDIDOS
+   Los pedidos se consultan mediante MyOrdersService.
 ========================================================= */
 
 (function () {
   if (window.__urbanMyOrdersInstalled) return;
   window.__urbanMyOrdersInstalled = true;
 
-  const ORDERS_TABLE = "Orders";
+  const MY_ORDERS_SERVICE = "MyOrdersService";
+  const MY_ORDERS_ROUTE = "orders";
 
   function cargarEstilosMisPedidos() {
     if (document.querySelector('link[data-urban-my-orders]')) return;
@@ -28,7 +30,7 @@
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
+      .replace(/\"/g, "&quot;")
       .replace(/'/g, "&#039;");
   }
 
@@ -142,6 +144,58 @@
     `;
   }
 
+  async function obtenerPedidosDesdeServicioSeguro() {
+    if (typeof Backendless === "undefined") {
+      throw new Error("Backendless no está disponible.");
+    }
+
+    if (
+      typeof BACKENDLESS_CONFIG === "undefined" ||
+      !BACKENDLESS_CONFIG.SUBDOMAIN
+    ) {
+      throw new Error("Falta la configuración del endpoint de Backendless.");
+    }
+
+    const userToken = await Backendless.UserService.getCurrentUserToken();
+
+    if (!userToken) {
+      throw new Error("Tu sesión expiró. Inicia sesión nuevamente.");
+    }
+
+    const endpoint =
+      `https://${BACKENDLESS_CONFIG.SUBDOMAIN}/api/services/${MY_ORDERS_SERVICE}/${MY_ORDERS_ROUTE}`;
+
+    const respuesta = await fetch(endpoint, {
+      method: "GET",
+      credentials: "omit",
+      headers: {
+        Accept: "application/json",
+        "user-token": userToken
+      }
+    });
+
+    let data = null;
+
+    try {
+      data = await respuesta.json();
+    } catch (_) {
+      // El manejo de error se realiza abajo.
+    }
+
+    if (!respuesta.ok) {
+      throw new Error(
+        data?.message ||
+        data?.error ||
+        `Backendless respondió ${respuesta.status}`
+      );
+    }
+
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(data?.result)) return data.result;
+
+    return [];
+  }
+
   async function cargarMisPedidos() {
     const contenido = document.getElementById("my-orders-content");
     if (!contenido) return;
@@ -154,14 +208,7 @@
     contenido.innerHTML = '<div class="my-orders-loading">Cargando pedidos...</div>';
 
     try {
-      const userId = String(usuarioActual.objectId || "").replace(/'/g, "\\'");
-      const query = Backendless.DataQueryBuilder
-        .create()
-        .setWhereClause(`userId = '${userId}'`)
-        .setSortBy(["created DESC"])
-        .setPageSize(50);
-
-      const pedidos = await Backendless.Data.of(ORDERS_TABLE).find(query) || [];
+      const pedidos = await obtenerPedidosDesdeServicioSeguro();
 
       if (!pedidos.length) {
         contenido.innerHTML = `
@@ -179,7 +226,7 @@
       contenido.innerHTML = `
         <div class="my-orders-error">
           <h3>No pudimos cargar tus pedidos</h3>
-          <p>${escapar(error?.message || "Revisa la configuración de permisos de Orders.")}</p>
+          <p>${escapar(error?.message || "No se pudieron consultar tus pedidos.")}</p>
         </div>
       `;
     }
