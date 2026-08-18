@@ -2,8 +2,8 @@
    URBAN SOCIETY
    CHECKOUT SEGURO CON SUPABASE
 
-   El navegador solo envía IDs, cantidades y datos de entrega.
-   La función SQL create_order toma precios reales, valida stock,
+   El navegador solo envía IDs, cantidades, talla y datos de entrega.
+   La función SQL create_order toma precios reales, valida stock/talla,
    descuenta inventario y crea el pedido en una sola transacción.
 ========================================================= */
 
@@ -39,7 +39,8 @@
 
     const items = carritoUrban.map(item => ({
       product_id: String(item.id || "").trim(),
-      quantity: Number(item.quantity || 0)
+      quantity: Number(item.quantity || 0),
+      size: String(item.size || "").trim() || null
     }));
 
     if (
