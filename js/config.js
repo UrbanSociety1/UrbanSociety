@@ -58,3 +58,7 @@ document.write(
 document.write(
     '<script src="js/my-orders.js"><\/script>'
 );
+
+document.write(
+    '<script src="js/admin-pos-link.js"><\/script>'
+);
