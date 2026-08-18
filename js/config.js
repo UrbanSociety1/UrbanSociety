@@ -17,6 +17,39 @@ const BACKENDLESS_CONFIG = {
     JS_API_KEY: "supabase-compat"
 };
 
+/* Favicon y acceso desde pantalla de inicio */
+const URBAN_FAVICON_URL = "images/Logo Urban.png?v=urban-favicon-1";
+
+(function instalarUrbanFavicon() {
+    let favicon = document.querySelector('link[rel="icon"]');
+
+    if (!favicon) {
+        favicon = document.createElement("link");
+        favicon.rel = "icon";
+        favicon.type = "image/png";
+        document.head.appendChild(favicon);
+    }
+
+    favicon.href = URBAN_FAVICON_URL;
+
+    let shortcut = document.querySelector('link[rel="shortcut icon"]');
+    if (!shortcut) {
+        shortcut = document.createElement("link");
+        shortcut.rel = "shortcut icon";
+        shortcut.type = "image/png";
+        document.head.appendChild(shortcut);
+    }
+    shortcut.href = URBAN_FAVICON_URL;
+
+    let appleIcon = document.querySelector('link[rel="apple-touch-icon"]');
+    if (!appleIcon) {
+        appleIcon = document.createElement("link");
+        appleIcon.rel = "apple-touch-icon";
+        document.head.appendChild(appleIcon);
+    }
+    appleIcon.href = URBAN_FAVICON_URL;
+})();
+
 /* Formulario de contacto */
 window.FORMSPREE_ENDPOINT =
     "https://formspree.io/f/xqpzyrde";
