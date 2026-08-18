@@ -3,20 +3,18 @@
    CONFIGURACIÓN
 ========================================== */
 
+const SUPABASE_CONFIG = {
+    URL: "https://hwlypgwalwhuqxobxwbn.supabase.co",
+    PUBLISHABLE_KEY: "sb_publishable_yqhal6S54Pwai6oBF9JmwA_T1EpWsoO"
+};
+
+/*
+   Compatibilidad temporal con módulos que todavía llaman iniciarBackendless().
+   No contiene credenciales privadas ni conecta con Backendless.
+*/
 const BACKENDLESS_CONFIG = {
-
-    APPLICATION_ID:
-        "EDD079F7-948B-4234-8135-EBB129DF75EA",
-
-    JS_API_KEY:
-        "74CB12A4-98F6-499A-8872-9ED95BB43D91",
-
-    API_URL:
-        "https://api.backendless.com",
-
-    SUBDOMAIN:
-        "shiningsubstance-us.backendless.app"
-
+    APPLICATION_ID: "supabase-compat",
+    JS_API_KEY: "supabase-compat"
 };
 
 /* Formulario de contacto */
@@ -28,25 +26,19 @@ window.FORMSPREE_ORDERS_ENDPOINT =
     "https://formspree.io/f/xppayvbo";
 
 /*
-   Checkout server-side.
-
-   Se mantiene en false hasta que CheckoutService/create-order esté
-   desplegado en Backendless. De esta forma la tienda no se rompe mientras
-   terminamos la parte de servidor.
+   La capa Supabase se carga antes de los módulos existentes para que
+   catálogo, admin y autenticación puedan seguir usando una interfaz simple.
 */
-window.URBAN_USE_SERVER_CHECKOUT = false;
+document.write(
+    '<script src="js/supabase-backend.js"><\/script>'
+);
 
-/*
-   Cargamos los módulos auxiliares antes de app.js.
-*/
 document.write(
     '<script src="js/order-notifications.js"><\/script>'
 );
 
 document.write(
-    window.URBAN_USE_SERVER_CHECKOUT
-        ? '<script src="js/checkout-server.js"><\/script>'
-        : '<script src="js/checkout-secure.js"><\/script>'
+    '<script src="js/checkout-secure.js"><\/script>'
 );
 
 document.write(
