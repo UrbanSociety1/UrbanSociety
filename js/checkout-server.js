@@ -2,9 +2,12 @@
    URBAN SOCIETY
    CHECKOUT SERVER-SIDE
 
-   Este módulo NO confía en precios ni totales del navegador.
-   Solo envía IDs de producto, cantidades y datos del cliente.
-   CheckoutService valida productos, stock, precios y total en Backendless.
+   El navegador NO envía precios, subtotales, total ni userId confiable.
+   Solo envía IDs de producto, cantidades y datos de entrega.
+
+   Si existe una sesión, enviamos el user-token únicamente para que
+   CheckoutService/createOrder obtenga el User Id desde el contexto seguro
+   de Backendless. La lógica interna de datos corre después sin ese token.
 ========================================================= */
 
 (function () {
@@ -13,6 +16,22 @@
 
   const SERVICE_NAME = "CheckoutService";
   const SERVICE_ROUTE = "create-order";
+
+  async function obtenerTokenSesion() {
+    if (
+      typeof Backendless === "undefined" ||
+      !Backendless.UserService ||
+      typeof Backendless.UserService.getCurrentUserToken !== "function"
+    ) {
+      return null;
+    }
+
+    try {
+      return await Backendless.UserService.getCurrentUserToken();
+    } catch (_) {
+      return null;
+    }
+  }
 
   async function llamarCheckoutService(payload) {
     if (
@@ -25,13 +44,18 @@
     const endpoint =
       `https://${BACKENDLESS_CONFIG.SUBDOMAIN}/api/services/${SERVICE_NAME}/${SERVICE_ROUTE}`;
 
+    const headers = {
+      "Content-Type": "application/json",
+      Accept: "application/json"
+    };
+
+    const userToken = await obtenerTokenSesion();
+    if (userToken) headers["user-token"] = userToken;
+
     const respuesta = await fetch(endpoint, {
       method: "POST",
       credentials: "omit",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json"
-      },
+      headers,
       body: JSON.stringify({ payload })
     });
 
@@ -80,7 +104,13 @@
       quantity: Number(item.quantity || 0)
     }));
 
-    if (items.some(item => !item.productId || !Number.isInteger(item.quantity) || item.quantity <= 0)) {
+    if (
+      items.some(item =>
+        !item.productId ||
+        !Number.isInteger(item.quantity) ||
+        item.quantity <= 0
+      )
+    ) {
       alert("El carrito contiene datos inválidos. Recarga la página e intenta nuevamente.");
       return;
     }
@@ -91,11 +121,7 @@
       customerPhone: phone,
       address,
       paymentMethod,
-      items,
-      userId:
-        typeof usuarioActual !== "undefined" && usuarioActual
-          ? String(usuarioActual.objectId || "")
-          : null
+      items
     };
 
     if (submit) {
