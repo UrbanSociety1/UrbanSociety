@@ -92,11 +92,20 @@
       ? productos.map(producto => {
           const cantidad = Number(producto.quantity || 0);
           const nombre = escapar(producto.name || "Producto");
+          const talla = String(producto.size || "").trim();
           const subtotal = Number(
             producto.subtotal ||
             Number(producto.price || 0) * cantidad
           );
-          return `<li><span>${cantidad} × ${nombre}</span><strong>${formatearPrecio(subtotal)}</strong></li>`;
+          return `
+            <li>
+              <span>
+                ${cantidad} × ${nombre}
+                ${talla ? `<small style="display:block;color:#999;margin-top:3px">Talla ${escapar(talla)}</small>` : ""}
+              </span>
+              <strong>${formatearPrecio(subtotal)}</strong>
+            </li>
+          `;
         }).join("")
       : '<li><span>Sin detalle de productos</span></li>';
 
