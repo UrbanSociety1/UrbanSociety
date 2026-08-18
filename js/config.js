@@ -26,9 +26,16 @@ window.FORMSPREE_ORDERS_ENDPOINT =
     "https://formspree.io/f/xppayvbo";
 
 /*
-   La capa Supabase se carga antes de los módulos existentes para que
-   catálogo, admin y autenticación puedan seguir usando una interfaz simple.
+   admin.html todavía conserva el antiguo CDN de Backendless por compatibilidad
+   visual. Si Supabase JS no está presente, lo cargamos aquí antes de la capa
+   nueva. UrbanSociety.html ya lo carga directamente.
 */
+if (!window.supabase) {
+    document.write(
+        '<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"><\/script>'
+    );
+}
+
 document.write(
     '<script src="js/supabase-backend.js"><\/script>'
 );
