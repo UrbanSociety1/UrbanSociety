@@ -6,7 +6,8 @@
   const manifest=document.querySelector('link[rel="manifest"]')||document.createElement('link');
   manifest.rel='manifest';manifest.href='manifest.webmanifest';if(!manifest.parentNode)document.head.appendChild(manifest);
   function installButton(){
-    const page=(location.pathname.split('/').pop()||'').toLowerCase();
+    const raw=(location.pathname.split('/').pop()||'').toLowerCase();
+    const page=raw||'urbansociety.html';
     if(!['urbansociety.html','account.html'].includes(page)||document.getElementById('urban-install-app'))return null;
     const b=document.createElement('button');b.id='urban-install-app';b.type='button';b.textContent='⬇ Instalar app';
     Object.assign(b.style,{position:'fixed',left:'16px',bottom:'16px',zIndex:'6500',display:'none',padding:'10px 13px',border:'1px solid #393941',borderRadius:'999px',background:'#111116',color:'#fff',fontWeight:'800',boxShadow:'0 12px 35px rgba(0,0,0,.35)'});
