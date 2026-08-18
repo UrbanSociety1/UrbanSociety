@@ -132,4 +132,7 @@ if (URBAN_CURRENT_PAGE === "admin.html") {
     document.write(
         '<script src="js/admin-dashboard.js"><\/script>'
     );
+    document.write(
+        '<script src="js/dedicated-pages-upgrade.js"><\/script>'
+    );
 }
