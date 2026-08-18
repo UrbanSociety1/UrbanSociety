@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#08080b">
+  <title>Urban Society | Caja y cortes</title>
+  <link rel="stylesheet" href="css/pos.css">
+  <link rel="stylesheet" href="css/cash-cut.css">
+  <link rel="stylesheet" href="css/admin-pages.css">
+</head>
+<body>
+  <header class="cash-screen-intro">
+    <span class="admin-page-eyebrow">CONTROL DE EFECTIVO</span>
+    <h1>Caja y cortes</h1>
+    <p>Abre caja, registra movimientos, revisa el efectivo esperado y guarda tus cortes desde una pantalla exclusiva.</p>
+  </header>
+
+  <main id="cash-page-mount"></main>
+  <div id="pos-toast" class="pos-toast" role="status" aria-live="polite"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/backendless.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/cash-cut.js"></script>
+</body>
+</html>
