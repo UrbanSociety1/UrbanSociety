@@ -8,7 +8,7 @@
   if (window.__urbanOrderNotifierInstalled) return;
   window.__urbanOrderNotifierInstalled = true;
 
-  const BACKENDLESS_ORDERS_TABLE = "Pedidos";
+  const BACKENDLESS_ORDERS_TABLE = "Orders";
 
   function obtenerEndpointPedidos() {
     return String(
@@ -162,9 +162,9 @@
       );
 
       /*
-         El código histórico de la tienda usa "Orders", pero la tabla
-         existente en Backendless se llama "Pedidos". Toda operación de
-         lectura/escritura de Orders se redirige a Pedidos.
+         La tabla configurada para pedidos es Orders. Si alguna parte
+         antigua del proyecto pide "Pedidos", también la redirigimos
+         a Orders para mantener una sola fuente de datos.
       */
       const nombreReal = esTablaPedidos
         ? BACKENDLESS_ORDERS_TABLE
@@ -205,7 +205,7 @@
     Backendless.Data.of = urbanDataOf;
 
     console.info(
-      `Avisos de pedidos Urban Society activados. Orders → ${BACKENDLESS_ORDERS_TABLE}.`
+      `Avisos de pedidos Urban Society activados. Pedidos/Orders → ${BACKENDLESS_ORDERS_TABLE}.`
     );
     return true;
   }
