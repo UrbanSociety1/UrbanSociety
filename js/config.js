@@ -28,6 +28,15 @@ window.FORMSPREE_ORDERS_ENDPOINT =
     "https://formspree.io/f/xppayvbo";
 
 /*
+   Checkout server-side.
+
+   Se mantiene en false hasta que CheckoutService/create-order esté
+   desplegado en Backendless. De esta forma la tienda no se rompe mientras
+   terminamos la parte de servidor.
+*/
+window.URBAN_USE_SERVER_CHECKOUT = false;
+
+/*
    Cargamos los módulos auxiliares antes de app.js.
 */
 document.write(
@@ -35,7 +44,9 @@ document.write(
 );
 
 document.write(
-    '<script src="js/checkout-secure.js"><\/script>'
+    window.URBAN_USE_SERVER_CHECKOUT
+        ? '<script src="js/checkout-server.js"><\/script>'
+        : '<script src="js/checkout-secure.js"><\/script>'
 );
 
 document.write(
