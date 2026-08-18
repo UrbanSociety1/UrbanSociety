@@ -2,9 +2,9 @@
   publish = "."
 
 [[redirects]]
-  from = "/"
-  to = "/UrbanSociety.html"
-  status = 200
+  from = "/UrbanSociety.html"
+  to = "/"
+  status = 301
   force = true
 
 [[headers]]
