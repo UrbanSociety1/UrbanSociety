@@ -66,8 +66,15 @@ if (!document.querySelector('link[href="css/polish.css"]')) {
     document.head.appendChild(polish);
 }
 
-/* Menú unificado solo para el área administrativa */
-const URBAN_BACKOFFICE_PAGES = ["admin.html", "pos.html", "settings.html"];
+/* Menú unificado para todas las pantallas administrativas */
+const URBAN_BACKOFFICE_PAGES = [
+    "admin.html",
+    "pos.html",
+    "products.html",
+    "orders.html",
+    "cash.html",
+    "settings.html"
+];
 const URBAN_CURRENT_PAGE = (location.pathname.split("/").pop() || "").toLowerCase();
 
 if (URBAN_BACKOFFICE_PAGES.includes(URBAN_CURRENT_PAGE)) {
