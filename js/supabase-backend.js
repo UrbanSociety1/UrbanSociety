@@ -62,7 +62,9 @@
       image: row.image,
       imageUrl: row.image,
       price: Number(row.price || 0),
-      stock: Number(row.stock || 0)
+      stock: Number(row.stock || 0),
+      sizes: String(row.sizes || ""),
+      active: row.active !== false
     };
   }
 
@@ -102,14 +104,18 @@
     const data = value || {};
 
     if (table === "products") {
-      return {
-        name: data.name,
-        category: data.category || "General",
-        description: data.description || "",
-        image: data.image || data.imageUrl || "",
-        price: Number(data.price || 0),
-        stock: Number(data.stock || 0)
-      };
+      const result = {};
+      if (data.name !== undefined) result.name = String(data.name || "").trim();
+      if (data.category !== undefined) result.category = String(data.category || "General").trim() || "General";
+      if (data.description !== undefined) result.description = String(data.description || "");
+      if (data.image !== undefined || data.imageUrl !== undefined) {
+        result.image = String(data.image || data.imageUrl || "");
+      }
+      if (data.price !== undefined) result.price = Number(data.price || 0);
+      if (data.stock !== undefined) result.stock = Number(data.stock || 0);
+      if (data.sizes !== undefined) result.sizes = String(data.sizes || "").trim();
+      if (data.active !== undefined) result.active = Boolean(data.active);
+      return result;
     }
 
     if (table === "orders") {
