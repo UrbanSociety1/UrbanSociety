@@ -3,6 +3,13 @@
    CASH CUT - APERTURA Y CORTE DE CAJA
 ========================================================= */
 
+/* En el Punto de Venta mantenemos la validación de caja,
+   pero el tablero completo vive en cash.html. */
+body.pos-screen .pos-cash-section,
+body.pos-screen .pos-cash-history-section {
+  display: none !important;
+}
+
 .pos-cash-section,
 .pos-cash-history-section {
   width: min(1500px, calc(100% - 32px));
