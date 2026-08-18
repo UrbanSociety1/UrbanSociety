@@ -5,8 +5,8 @@
 
 .admin-dashboard {
   display: grid;
-  gap: 18px;
-  margin-bottom: 30px;
+  gap: 14px;
+  margin-bottom: 26px;
 }
 
 .admin-dashboard-hero {
@@ -15,10 +15,10 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 24px;
-  padding: 26px;
+  gap: 20px;
+  padding: 21px 24px;
   border: 1px solid #292930;
-  border-radius: 20px;
+  border-radius: 18px;
   background:
     radial-gradient(circle at 92% 20%, rgba(255,16,39,.17), transparent 34%),
     linear-gradient(135deg, #15151a, #0d0d11);
@@ -28,9 +28,9 @@
   content: "";
   position: absolute;
   right: -70px;
-  top: -90px;
-  width: 260px;
-  height: 260px;
+  top: -100px;
+  width: 250px;
+  height: 250px;
   border: 1px solid rgba(255,16,39,.18);
   border-radius: 50%;
   pointer-events: none;
@@ -38,9 +38,9 @@
 
 .admin-dashboard-eyebrow {
   display: block;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   color: #ff6475;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 900;
   letter-spacing: .16em;
   text-transform: uppercase;
@@ -48,61 +48,62 @@
 
 .admin-dashboard-hero h2 {
   margin: 0;
-  font-size: clamp(25px, 4vw, 38px);
+  font-size: clamp(24px, 3vw, 34px);
   letter-spacing: -.035em;
 }
 
 .admin-dashboard-hero p {
-  max-width: 610px;
-  margin: 9px 0 0;
+  max-width: 680px;
+  margin: 7px 0 0;
   color: #a5a5ae;
-  line-height: 1.55;
+  line-height: 1.45;
+  font-size: 14px;
 }
 
 .admin-dashboard-date {
   position: relative;
   z-index: 1;
   flex: 0 0 auto;
-  padding: 10px 13px;
+  padding: 9px 12px;
   border: 1px solid #33333a;
   border-radius: 999px;
   background: rgba(10,10,13,.74);
   color: #d4d4da;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 800;
 }
 
 .admin-dashboard-metrics {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
+  gap: 10px;
 }
 
 .admin-dashboard-metric {
   position: relative;
-  min-height: 128px;
-  padding: 18px;
+  min-height: 108px;
+  padding: 14px 16px;
   border: 1px solid #292930;
-  border-radius: 16px;
+  border-radius: 15px;
   background: linear-gradient(145deg, #141419, #0e0e12);
 }
 
 .admin-dashboard-metric .metric-icon {
-  width: 36px;
-  height: 36px;
+  width: 31px;
+  height: 31px;
   display: grid;
   place-items: center;
-  margin-bottom: 14px;
+  margin-bottom: 10px;
   border: 1px solid #33333a;
-  border-radius: 10px;
+  border-radius: 9px;
   background: #19191e;
-  font-size: 18px;
+  font-size: 15px;
 }
 
 .admin-dashboard-metric .metric-label {
   display: block;
   color: #8e8e98;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: .08em;
@@ -110,16 +111,17 @@
 
 .admin-dashboard-metric strong {
   display: block;
-  margin-top: 6px;
-  font-size: 25px;
+  margin-top: 4px;
+  font-size: 22px;
   letter-spacing: -.025em;
 }
 
 .admin-dashboard-metric small {
   display: block;
-  margin-top: 5px;
+  margin-top: 3px;
   color: #85858f;
-  line-height: 1.4;
+  line-height: 1.35;
+  font-size: 11px;
 }
 
 .admin-dashboard-metric.is-alert {
@@ -136,15 +138,15 @@
 
 .admin-dashboard-main-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.12fr) minmax(300px, .88fr);
-  gap: 14px;
+  grid-template-columns: minmax(0, 1.25fr) minmax(300px, .75fr);
+  gap: 12px;
 }
 
 .admin-dashboard-panel {
   min-width: 0;
-  padding: 20px;
+  padding: 17px;
   border: 1px solid #292930;
-  border-radius: 17px;
+  border-radius: 16px;
   background: #101014;
 }
 
@@ -152,18 +154,18 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 14px;
-  margin-bottom: 15px;
+  gap: 12px;
+  margin-bottom: 12px;
 }
 
 .admin-dashboard-panel-head h3 {
   margin: 0;
-  font-size: 17px;
+  font-size: 16px;
 }
 
 .admin-dashboard-panel-head a {
   color: #ff7e8c;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 800;
   text-decoration: none;
 }
@@ -171,7 +173,7 @@
 .admin-dashboard-activity,
 .admin-dashboard-stock-list {
   display: grid;
-  gap: 8px;
+  gap: 7px;
 }
 
 .admin-dashboard-activity-row,
@@ -179,89 +181,91 @@
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
-  gap: 11px;
-  padding: 11px 12px;
+  gap: 10px;
+  padding: 9px 10px;
   border: 1px solid #28282e;
-  border-radius: 11px;
+  border-radius: 10px;
   background: #141419;
 }
 
 .admin-dashboard-activity-icon {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   display: grid;
   place-items: center;
-  border-radius: 10px;
+  border-radius: 9px;
   background: #1d1d23;
 }
 
 .admin-dashboard-activity-row strong,
 .admin-dashboard-stock-row strong {
   display: block;
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .admin-dashboard-activity-row small,
 .admin-dashboard-stock-row small {
   display: block;
-  margin-top: 3px;
+  margin-top: 2px;
   color: #81818b;
-  font-size: 11px;
+  font-size: 10px;
 }
 
 .admin-dashboard-activity-amount {
   text-align: right;
   color: #f0f0f3;
   white-space: nowrap;
+  font-size: 12px;
 }
 
 .admin-dashboard-stock-row {
-  grid-template-columns: 44px 1fr auto;
+  grid-template-columns: 40px 1fr auto;
 }
 
 .admin-dashboard-stock-row img {
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   object-fit: cover;
-  border-radius: 9px;
+  border-radius: 8px;
   background: #09090c;
 }
 
 .admin-dashboard-stock-count {
-  min-width: 38px;
-  padding: 6px 8px;
+  min-width: 36px;
+  padding: 5px 7px;
   border: 1px solid rgba(255,170,70,.32);
-  border-radius: 9px;
+  border-radius: 8px;
   background: rgba(255,170,70,.08);
   color: #ffd28a;
   text-align: center;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 900;
 }
 
 .admin-dashboard-empty {
-  padding: 25px 15px;
+  padding: 20px 14px;
   border: 1px dashed #303037;
-  border-radius: 12px;
+  border-radius: 11px;
   color: #83838c;
   text-align: center;
-  line-height: 1.5;
+  line-height: 1.45;
+  font-size: 12px;
 }
 
 .admin-dashboard-actions {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 10px;
+  gap: 8px;
 }
 
 .admin-dashboard-action {
   display: flex;
   align-items: center;
-  gap: 10px;
-  min-height: 62px;
-  padding: 12px;
+  gap: 9px;
+  min-height: 54px;
+  padding: 10px 11px;
   border: 1px solid #2b2b32;
-  border-radius: 13px;
+  border-radius: 12px;
   background: #131318;
   color: #fff;
   text-decoration: none;
@@ -275,32 +279,35 @@
 }
 
 .admin-dashboard-action span:first-child {
-  font-size: 20px;
+  font-size: 18px;
 }
 
 .admin-dashboard-action b {
   display: block;
-  font-size: 12px;
+  font-size: 11px;
 }
 
 .admin-dashboard-action small {
   display: block;
   margin-top: 2px;
   color: #777781;
-  font-size: 10px;
+  font-size: 9px;
 }
 
 .admin-dashboard-loading {
-  min-height: 110px;
+  min-height: 90px;
   display: grid;
   place-items: center;
   color: #888891;
 }
 
-/* Las tarjetas antiguas siguen existiendo para compatibilidad con admin.js,
-   pero el nuevo dashboard las sustituye visualmente. */
 body.admin-dashboard-ready .stats {
   display: none !important;
+}
+
+@media (min-width: 1450px) {
+  .admin-dashboard-metrics { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  .admin-dashboard-metric { min-height: 112px; }
 }
 
 @media (max-width: 1050px) {
@@ -318,7 +325,7 @@ body.admin-dashboard-ready .stats {
   .admin-dashboard-metrics { grid-template-columns: 1fr; }
   .admin-dashboard-actions { grid-template-columns: 1fr; }
   .admin-dashboard-hero,
-  .admin-dashboard-panel { padding: 16px; }
+  .admin-dashboard-panel { padding: 15px; }
   .admin-dashboard-activity-row { grid-template-columns: auto 1fr; }
   .admin-dashboard-activity-amount { grid-column: 2; text-align: left; }
 }
