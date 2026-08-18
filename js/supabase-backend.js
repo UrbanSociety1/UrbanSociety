@@ -64,6 +64,8 @@
       price: Number(row.price || 0),
       stock: Number(row.stock || 0),
       sizes: String(row.sizes || ""),
+      sku: String(row.sku || ""),
+      barcode: String(row.barcode || ""),
       active: row.active !== false
     };
   }
@@ -108,12 +110,12 @@
       if (data.name !== undefined) result.name = String(data.name || "").trim();
       if (data.category !== undefined) result.category = String(data.category || "General").trim() || "General";
       if (data.description !== undefined) result.description = String(data.description || "");
-      if (data.image !== undefined || data.imageUrl !== undefined) {
-        result.image = String(data.image || data.imageUrl || "");
-      }
+      if (data.image !== undefined || data.imageUrl !== undefined) result.image = String(data.image || data.imageUrl || "");
       if (data.price !== undefined) result.price = Number(data.price || 0);
       if (data.stock !== undefined) result.stock = Number(data.stock || 0);
       if (data.sizes !== undefined) result.sizes = String(data.sizes || "").trim();
+      if (data.sku !== undefined) result.sku = String(data.sku || "").trim();
+      if (data.barcode !== undefined) result.barcode = String(data.barcode || "").trim();
       if (data.active !== undefined) result.active = Boolean(data.active);
       return result;
     }
@@ -125,11 +127,7 @@
       if (data.customerPhone !== undefined) result.customer_phone = data.customerPhone;
       if (data.address !== undefined) result.address = data.address;
       if (data.paymentMethod !== undefined) result.payment_method = data.paymentMethod;
-      if (data.products !== undefined) {
-        result.products = Array.isArray(data.products)
-          ? data.products
-          : JSON.parse(data.products || "[]");
-      }
+      if (data.products !== undefined) result.products = Array.isArray(data.products) ? data.products : JSON.parse(data.products || "[]");
       if (data.total !== undefined) result.total = Number(data.total || 0);
       if (data.status !== undefined) result.status = data.status;
       if (data.userId !== undefined) result.user_id = data.userId || null;
@@ -142,106 +140,48 @@
   function mapSortField(field) {
     const clean = String(field || "").trim();
     const [raw, direction] = clean.split(/\s+/);
-    const map = {
-      created: "created_at",
-      updated: "updated_at",
-      objectId: "id",
-      userId: "user_id"
-    };
-    return {
-      column: map[raw] || raw,
-      ascending: String(direction || "ASC").toUpperCase() !== "DESC"
-    };
+    const map = { created: "created_at", updated: "updated_at", objectId: "id", userId: "user_id" };
+    return { column: map[raw] || raw, ascending: String(direction || "ASC").toUpperCase() !== "DESC" };
   }
 
   class UrbanQueryBuilder {
-    constructor() {
-      this.sortBy = [];
-      this.pageSize = null;
-      this.whereClause = "";
-    }
-    setSortBy(value) {
-      this.sortBy = Array.isArray(value) ? value : [value];
-      return this;
-    }
-    setPageSize(value) {
-      this.pageSize = Number(value || 0) || null;
-      return this;
-    }
-    setWhereClause(value) {
-      this.whereClause = String(value || "");
-      return this;
-    }
+    constructor() { this.sortBy = []; this.pageSize = null; this.whereClause = ""; }
+    setSortBy(value) { this.sortBy = Array.isArray(value) ? value : [value]; return this; }
+    setPageSize(value) { this.pageSize = Number(value || 0) || null; return this; }
+    setWhereClause(value) { this.whereClause = String(value || ""); return this; }
   }
 
   function storeFor(tableName) {
     const table = nombreTabla(tableName);
-
     return {
       async find(queryBuilder) {
         let query = client.from(table).select("*");
         const qb = queryBuilder || {};
-
         const where = String(qb.whereClause || "");
         const match = where.match(/^\s*(userId|objectId)\s*=\s*'([^']*)'\s*$/i);
-        if (match) {
-          const column = match[1].toLowerCase() === "userid" ? "user_id" : "id";
-          query = query.eq(column, match[2]);
-        }
-
-        for (const sort of qb.sortBy || []) {
-          const parsed = mapSortField(sort);
-          query = query.order(parsed.column, { ascending: parsed.ascending });
-        }
-
+        if (match) query = query.eq(match[1].toLowerCase() === "userid" ? "user_id" : "id", match[2]);
+        for (const sort of qb.sortBy || []) { const parsed = mapSortField(sort); query = query.order(parsed.column, { ascending: parsed.ascending }); }
         if (qb.pageSize) query = query.limit(qb.pageSize);
-
-        const { data, error } = await query;
-        if (error) throw error;
+        const { data, error } = await query; if (error) throw error;
         return (data || []).map(row => aLegacy(table, row));
       },
-
       async findById(id) {
-        const { data, error } = await client
-          .from(table)
-          .select("*")
-          .eq("id", id)
-          .single();
-        if (error) throw error;
-        return aLegacy(table, data);
+        const { data, error } = await client.from(table).select("*").eq("id", id).single();
+        if (error) throw error; return aLegacy(table, data);
       },
-
       async save(value) {
         const objectId = value?.objectId || value?.id || null;
         const body = aDb(table, value);
-
         if (objectId) {
-          const { data, error } = await client
-            .from(table)
-            .update(body)
-            .eq("id", objectId)
-            .select("*")
-            .single();
-          if (error) throw error;
-          return aLegacy(table, data);
+          const { data, error } = await client.from(table).update(body).eq("id", objectId).select("*").single();
+          if (error) throw error; return aLegacy(table, data);
         }
-
-        const { data, error } = await client
-          .from(table)
-          .insert(body)
-          .select("*")
-          .single();
-        if (error) throw error;
-        return aLegacy(table, data);
+        const { data, error } = await client.from(table).insert(body).select("*").single();
+        if (error) throw error; return aLegacy(table, data);
       },
-
       async remove(idOrObject) {
-        const id = typeof idOrObject === "string"
-          ? idOrObject
-          : idOrObject?.objectId || idOrObject?.id;
-        const { error } = await client.from(table).delete().eq("id", id);
-        if (error) throw error;
-        return true;
+        const id = typeof idOrObject === "string" ? idOrObject : idOrObject?.objectId || idOrObject?.id;
+        const { error } = await client.from(table).delete().eq("id", id); if (error) throw error; return true;
       }
     };
   }
@@ -249,91 +189,27 @@
   function BackendlessUser() {}
 
   const BackendlessCompat = {
-    initApp() {
-      return true;
-    },
-
+    initApp() { return true; },
     User: BackendlessUser,
-
-    DataQueryBuilder: {
-      create() {
-        return new UrbanQueryBuilder();
-      }
-    },
-
-    Data: {
-      of(tableName) {
-        return storeFor(tableName);
-      }
-    },
-
+    DataQueryBuilder: { create() { return new UrbanQueryBuilder(); } },
+    Data: { of(tableName) { return storeFor(tableName); } },
     UserService: {
       async register(user) {
-        const { data, error } = await client.auth.signUp({
-          email: user.email,
-          password: user.password,
-          options: {
-            data: {
-              name: user.name || ""
-            }
-          }
-        });
-        if (error) throw error;
-        const result = usuarioLegacy(data.user);
-        if (result) result.sessionCreated = Boolean(data.session);
-        return result;
+        const { data, error } = await client.auth.signUp({ email: user.email, password: user.password, options: { data: { name: user.name || "" } } });
+        if (error) throw error; const result = usuarioLegacy(data.user); if (result) result.sessionCreated = Boolean(data.session); return result;
       },
-
-      async login(email, password) {
-        const { data, error } = await client.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-        return usuarioLegacy(data.user);
-      },
-
-      async logout() {
-        const { error } = await client.auth.signOut();
-        if (error) throw error;
-        return true;
-      },
-
-      async getCurrentUser() {
-        const { data, error } = await client.auth.getUser();
-        if (error) {
-          if (/session/i.test(error.message || "")) return null;
-          throw error;
-        }
-        return usuarioLegacy(data.user);
-      },
-
-      async getCurrentUserToken() {
-        const { data, error } = await client.auth.getSession();
-        if (error) throw error;
-        return data.session?.access_token || null;
-      }
+      async login(email, password) { const { data, error } = await client.auth.signInWithPassword({ email, password }); if (error) throw error; return usuarioLegacy(data.user); },
+      async logout() { const { error } = await client.auth.signOut(); if (error) throw error; return true; },
+      async getCurrentUser() { const { data, error } = await client.auth.getUser(); if (error) { if (/session/i.test(error.message || "")) return null; throw error; } return usuarioLegacy(data.user); },
+      async getCurrentUserToken() { const { data, error } = await client.auth.getSession(); if (error) throw error; return data.session?.access_token || null; }
     },
-
     Files: {
       async upload(file, path, overwrite) {
-        const cleanPath = String(path || "")
-          .replace(/^\/+/, "")
-          .replace(/^products\//i, "");
-
-        const { error } = await client.storage
-          .from("products")
-          .upload(cleanPath, file, {
-            upsert: Boolean(overwrite),
-            cacheControl: "3600"
-          });
+        const cleanPath = String(path || "").replace(/^\/+/, "").replace(/^products\//i, "");
+        const { error } = await client.storage.from("products").upload(cleanPath, file, { upsert: Boolean(overwrite), cacheControl: "3600" });
         if (error) throw error;
-
-        const { data } = client.storage
-          .from("products")
-          .getPublicUrl(cleanPath);
-
-        return {
-          fileURL: data.publicUrl,
-          url: data.publicUrl
-        };
+        const { data } = client.storage.from("products").getPublicUrl(cleanPath);
+        return { fileURL: data.publicUrl, url: data.publicUrl };
       }
     }
   };
@@ -341,6 +217,5 @@
   window.Backendless = BackendlessCompat;
   window.urbanToLegacyProduct = productoLegacy;
   window.urbanToLegacyOrder = pedidoLegacy;
-
   console.info("Urban Society conectado a Supabase.");
 })();
