@@ -37,3 +37,7 @@ document.write(
 document.write(
     '<script src="js/checkout-secure.js"><\/script>'
 );
+
+document.write(
+    '<script src="js/my-orders.js"><\/script>'
+);
