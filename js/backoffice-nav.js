@@ -7,7 +7,14 @@
   window.__urbanBackofficeNavInstalled = true;
 
   const page = (location.pathname.split('/').pop() || '').toLowerCase();
-  const allowed = ['admin.html', 'pos.html', 'settings.html'];
+  const allowed = [
+    'admin.html',
+    'pos.html',
+    'products.html',
+    'orders.html',
+    'cash.html',
+    'settings.html'
+  ];
   if (!allowed.includes(page)) return;
 
   function item(href, icon, label, key) {
@@ -15,12 +22,11 @@
   }
 
   function activeKey() {
-    const hash = location.hash;
-    if (page === 'settings.html') return 'settings';
-    if (page === 'pos.html' && hash === '#pos-cash-section') return 'cash';
     if (page === 'pos.html') return 'pos';
-    if (page === 'admin.html' && hash === '#product-form') return 'products';
-    if (page === 'admin.html' && hash === '#admin-orders') return 'orders';
+    if (page === 'products.html') return 'products';
+    if (page === 'orders.html') return 'orders';
+    if (page === 'cash.html') return 'cash';
+    if (page === 'settings.html') return 'settings';
     return 'home';
   }
 
@@ -34,22 +40,6 @@
   function closeMenu() {
     document.getElementById('urban-bo-sidebar')?.classList.remove('open');
     document.getElementById('urban-bo-overlay')?.classList.remove('open');
-  }
-
-  function scrollToHashTarget() {
-    if (!location.hash) return;
-    const id = location.hash.slice(1);
-    let tries = 0;
-    const timer = setInterval(() => {
-      tries += 1;
-      const target = document.getElementById(id);
-      if (target) {
-        clearInterval(timer);
-        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      } else if (tries >= 20) {
-        clearInterval(timer);
-      }
-    }, 120);
   }
 
   async function logoutBackoffice() {
@@ -87,9 +77,9 @@
         ${item('pos.html', '🧾', 'Punto de venta', 'pos')}
 
         <div class="urban-bo-nav-label">Operación</div>
-        ${item('admin.html#product-form', '👟', 'Productos', 'products')}
-        ${item('admin.html#admin-orders', '📦', 'Pedidos', 'orders')}
-        ${item('pos.html#pos-cash-section', '💵', 'Caja y cortes', 'cash')}
+        ${item('products.html', '👟', 'Productos', 'products')}
+        ${item('orders.html', '📦', 'Pedidos', 'orders')}
+        ${item('cash.html', '💵', 'Caja y cortes', 'cash')}
 
         <div class="urban-bo-nav-label">Sistema</div>
         ${item('settings.html', '⚙', 'Configuración', 'settings')}
@@ -118,12 +108,6 @@
     sidebar.querySelectorAll('a').forEach(link => link.addEventListener('click', closeMenu));
     document.getElementById('urban-bo-logout')?.addEventListener('click', logoutBackoffice);
 
-    window.addEventListener('hashchange', () => {
-      setActive();
-      scrollToHashTarget();
-    });
-
     setActive();
-    setTimeout(scrollToHashTarget, 150);
   });
 })();
