@@ -122,6 +122,13 @@ document.write(
     '<script src="js/my-orders.js"><\/script>'
 );
 
+/* Entrada al nuevo panel completo de clientes */
+if (URBAN_CURRENT_PAGE === "urbansociety.html") {
+    document.write(
+        '<script src="js/customer-account-link.js"><\/script>'
+    );
+}
+
 if (URBAN_BACKOFFICE_PAGES.includes(URBAN_CURRENT_PAGE)) {
     document.write(
         '<script src="js/backoffice-nav.js"><\/script>'
