@@ -1,22 +1,43 @@
 /*
-  URBAN SOCIETY - CheckoutService / createOrder
+  URBAN SOCIETY - CheckoutService
 
-  Este archivo es una COPIA DE REFERENCIA para pegar dentro del bloque
-  Custom Code de Backendless Codeless. No se ejecuta desde el navegador.
+  ESTRUCTURA RECOMENDADA
+  ======================
 
-  Método recomendado:
-    Service: CheckoutService
-    Method: createOrder
-    HTTP: POST
-    Route: /create-order
-    Parameter: payload (Any Object)
+  1) Método público:
+     Service: CheckoutService
+     Method: createOrder
+     HTTP: POST
+     Route: /create-order
+     Parameter: payload (Any Object)
 
-  Conecta el argumento `payload` del método a un Custom Code con un
-  argumento también llamado `payload`, activa "Return result" y pega
-  solamente el cuerpo de la función checkoutServerSide de abajo.
+     Este método recibe el user-token del navegador SOLO para que Backendless
+     pueda exponer el bloque contextual "User Id".
+
+     La lógica de createOrder debe llamar a createOrderCore mediante un bloque
+     de API Service, conectando:
+       - payload  -> payload
+       - User Id  -> userId
+       - user-token -> NULL
+
+     Y devolver el resultado de createOrderCore.
+
+  2) Método interno:
+     Service: CheckoutService
+     Method: createOrderCore
+     Parameter: payload (Any Object)
+     Parameter: userId (String, no requerido)
+
+     Este método debe permitir invocación únicamente a ServerCodeUser.
+     Dentro de createOrderCore agrega un bloque Custom Code con argumentos
+     `payload` y `userId`, activa "Return result" y pega SOLAMENTE el cuerpo
+     de la función checkoutServerSide de abajo.
+
+  De esta forma el navegador nunca decide el userId del pedido y las llamadas
+  a Products/Orders se ejecutan sin AuthenticatedUser en el contexto interno.
 */
 
-async function checkoutServerSide(payload) {
+async function checkoutServerSide(payload, userId) {
   const data = payload && typeof payload === "object" ? payload : {};
 
   const customerName = String(data.customerName || "").trim();
@@ -24,7 +45,7 @@ async function checkoutServerSide(payload) {
   const customerPhone = String(data.customerPhone || "").trim();
   const address = String(data.address || "").trim();
   const paymentMethod = String(data.paymentMethod || "").trim();
-  const userId = data.userId ? String(data.userId).trim() : null;
+  const trustedUserId = userId ? String(userId).trim() : null;
   const items = Array.isArray(data.items) ? data.items : [];
 
   if (customerName.length < 2 || customerName.length > 120) {
@@ -132,14 +153,13 @@ async function checkoutServerSide(payload) {
     products: JSON.stringify(productosPedido),
     total,
     status: "Pendiente",
-    userId: userId || null
+    userId: trustedUserId || null
   };
 
   /*
-    El afterCreate de Orders que ya existe en Backendless se encarga de
-    descontar el stock. Al invocar este servicio SIN user-token, las llamadas
-    internas corren con ServerCodeUser y el navegador nunca recibe permiso
-    para modificar Products.
+    El afterCreate de Orders ya existente se encarga de descontar el stock.
+    createOrderCore debe invocarse con user-token NULL, por lo que las
+    llamadas internas se ejecutan únicamente bajo ServerCodeUser.
   */
   const guardado = await Backendless.Data.of("Orders").save(pedido);
 
