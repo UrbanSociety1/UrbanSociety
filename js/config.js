@@ -46,6 +46,16 @@ if (URBAN_BACKOFFICE_PAGES.includes(URBAN_CURRENT_PAGE)) {
     }
 }
 
+/* Dashboard solo para Inicio / Administración */
+if (URBAN_CURRENT_PAGE === "admin.html") {
+    if (!document.querySelector('link[href="css/admin-dashboard.css"]')) {
+        const dashboardCss = document.createElement("link");
+        dashboardCss.rel = "stylesheet";
+        dashboardCss.href = "css/admin-dashboard.css";
+        document.head.appendChild(dashboardCss);
+    }
+}
+
 /*
    Algunas páginas antiguas todavía cargan el SDK después.
    Si Supabase JS no está presente, lo cargamos aquí.
@@ -75,5 +85,11 @@ document.write(
 if (URBAN_BACKOFFICE_PAGES.includes(URBAN_CURRENT_PAGE)) {
     document.write(
         '<script src="js/backoffice-nav.js"><\/script>'
+    );
+}
+
+if (URBAN_CURRENT_PAGE === "admin.html") {
+    document.write(
+        '<script src="js/admin-dashboard.js"><\/script>'
     );
 }
