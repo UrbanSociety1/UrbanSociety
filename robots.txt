@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+Disallow: /admin.html
+Disallow: /pos.html
+Disallow: /products.html
+Disallow: /orders.html
+Disallow: /cash.html
+Disallow: /reports.html
+Disallow: /returns.html
+Disallow: /inventory.html
+Disallow: /customers.html
+Disallow: /staff.html
+Disallow: /staff-login.html
+Disallow: /settings.html
