@@ -47,13 +47,15 @@
       const subtotal = Number(
         producto.subtotal || precio * cantidad
       );
+      const talla = String(producto.size || "").trim();
 
       return [
         `${index + 1}. ${producto.name || "Producto"}`,
+        talla ? `Talla: ${talla}` : null,
         `Cantidad: ${cantidad}`,
         `Precio: ${formatearMXN(precio)}`,
         `Subtotal: ${formatearMXN(subtotal)}`
-      ].join(" | ");
+      ].filter(Boolean).join(" | ");
     }).join("\n");
   }
 
