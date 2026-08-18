@@ -28,9 +28,12 @@ window.FORMSPREE_ORDERS_ENDPOINT =
     "https://formspree.io/f/xppayvbo";
 
 /*
-   Cargamos el módulo de avisos antes de app.js para que
-   pueda escuchar los pedidos guardados en Backendless.
+   Cargamos los módulos auxiliares antes de app.js.
 */
 document.write(
     '<script src="js/order-notifications.js"><\/script>'
+);
+
+document.write(
+    '<script src="js/checkout-secure.js"><\/script>'
 );
