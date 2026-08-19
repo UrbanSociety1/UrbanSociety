@@ -7,7 +7,7 @@
 let usuarioActual = null;
 let usuarioEsOwner = false;
 
-const OWNER_EMAIL = "mendozaosornio010305@gmail.com";
+const OWNER_USER_ID = "ee3c1047-1655-4ab0-b4eb-6917ad69d4d9";
 
 function obtenerElemento(id) {
   return document.getElementById(id);
@@ -71,8 +71,8 @@ function mostrarTienda() {
 }
 
 function detectarPropietario(usuario) {
-  const email = String(usuario?.email || "").trim().toLowerCase();
-  usuarioEsOwner = Boolean(email && email === OWNER_EMAIL.toLowerCase());
+  const id = String(usuario?.id || usuario?.objectId || "").trim();
+  usuarioEsOwner = Boolean(id && id === OWNER_USER_ID);
   return usuarioEsOwner;
 }
 
