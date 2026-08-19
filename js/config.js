@@ -49,11 +49,15 @@ if (URBAN_CURRENT_PAGE === "admin.html") urbanAddCss("css/admin-dashboard.css");
 
 if (!window.supabase) document.write('<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"><\/script>');
 document.write('<script src="js/supabase-backend.js"><\/script>');
-document.write('<script src="js/order-notifications.js"><\/script>');
-document.write('<script src="js/checkout-secure.js"><\/script>');
-document.write('<script src="js/my-orders.js"><\/script>');
 
-if (URBAN_STOREFRONT_PAGES.includes(URBAN_CURRENT_PAGE)) document.write('<script src="js/customer-account-link.js"><\/script>');
+/* Carga cada módulo únicamente en las páginas donde se utiliza. Esto evita
+   estilos y listeners innecesarios dentro del POS y el panel administrativo. */
+if (URBAN_STOREFRONT_PAGES.includes(URBAN_CURRENT_PAGE)) {
+    document.write('<script src="js/order-notifications.js"><\/script>');
+    document.write('<script src="js/checkout-secure.js"><\/script>');
+    document.write('<script src="js/my-orders.js"><\/script>');
+    document.write('<script src="js/customer-account-link.js"><\/script>');
+}
 
 if (URBAN_BACKOFFICE_PAGES.includes(URBAN_CURRENT_PAGE)) {
     document.write('<script src="js/access.js"><\/script>');
