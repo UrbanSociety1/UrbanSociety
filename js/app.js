@@ -256,23 +256,34 @@ function guardarCarritoLocal() {
 
 function sincronizarCarritoConCatalogo() {
   const anterior = JSON.stringify(carritoUrban);
+  const agrupado = new Map();
 
-  carritoUrban = carritoUrban
-    .map(item => {
-      const producto = productosUrban.find(p => p.objectId === item.id && p.active !== false);
-      if (!producto) return null;
+  carritoUrban.forEach(item => {
+    if (!item || typeof item !== "object") return;
 
-      const stock = Number(producto.stock || 0);
-      if (stock <= 0) return null;
+    const id = String(item.id || "").trim();
+    const producto = productosUrban.find(p => p.objectId === id && p.active !== false);
+    if (!producto) return;
 
-      const tallas = normalizarTallas(producto.sizes);
-      const talla = String(item.size || "").trim();
-      if (tallas.length && !tallas.includes(talla)) return null;
+    const stock = Math.max(0, Math.trunc(Number(producto.stock || 0)));
+    if (stock <= 0) return;
 
-      const quantity = Math.min(Math.max(Number(item.quantity || 1), 1), stock);
-      return { id: item.id, quantity, size: talla };
-    })
-    .filter(Boolean);
+    const tallas = normalizarTallas(producto.sizes);
+    const talla = String(item.size || "").trim();
+    if (tallas.length && !tallas.includes(talla)) return;
+
+    const rawQuantity = Number(item.quantity);
+    const quantity = Number.isFinite(rawQuantity)
+      ? Math.max(1, Math.trunc(rawQuantity))
+      : 1;
+    const key = `${id}\u0000${talla}`;
+    const existente = agrupado.get(key);
+
+    if (existente) existente.quantity = Math.min(existente.quantity + quantity, stock);
+    else agrupado.set(key, { id, quantity: Math.min(quantity, stock), size: talla });
+  });
+
+  carritoUrban = [...agrupado.values()];
 
   if (JSON.stringify(carritoUrban) !== anterior) {
     guardarCarritoLocal();
