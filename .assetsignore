@@ -1,0 +1,5 @@
+.git/
+.github/
+wrangler.jsonc
+netlify.toml
+.assetsignore
