@@ -33,6 +33,16 @@ function urbanAddCss(href) {
 }
 urbanAddCss("css/polish.css");
 
+/* Marca temporal para comprobar qué despliegue está viendo el usuario. */
+document.addEventListener("DOMContentLoaded", () => {
+    if (document.getElementById("urban-deploy-check")) return;
+    const badge = document.createElement("div");
+    badge.id = "urban-deploy-check";
+    badge.textContent = "PRUEBA URBAN · 19 AGO 2026";
+    badge.style.cssText = "position:fixed;left:12px;bottom:12px;z-index:99999;padding:7px 10px;border-radius:999px;background:#ff1027;color:#fff;font:800 10px/1 Arial,sans-serif;letter-spacing:.08em;box-shadow:0 6px 20px rgba(0,0,0,.35)";
+    document.body.appendChild(badge);
+});
+
 const URBAN_BACKOFFICE_PAGES = [
     "admin.html","pos.html","products.html","orders.html","cash.html","reports.html",
     "returns.html","inventory.html","customers.html","staff.html","settings.html"
