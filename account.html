@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#08080b">
+  <title>Urban Society | Mi cuenta</title>
+  <link rel="stylesheet" href="css/account.css">
+</head>
+<body>
+  <header class="account-topbar">
+    <a href="UrbanSociety.html" class="account-brand">
+      <img src="images/Logo Urban.png" alt="Urban Society">
+      <div>
+        <strong>URBAN SOCIETY</strong>
+        <span>Mi cuenta</span>
+      </div>
+    </a>
+    <a href="UrbanSociety.html" class="account-store-link">← Seguir comprando</a>
+  </header>
+
+  <main class="account-shell">
+    <aside class="account-sidebar">
+      <div class="account-profile-card">
+        <div id="account-avatar" class="account-avatar">U</div>
+        <strong id="account-side-name">Usuario</strong>
+        <span id="account-side-email">Cargando...</span>
+      </div>
+
+      <nav class="account-nav" aria-label="Mi cuenta">
+        <a href="#overview" class="account-nav-link active" data-account-section="overview">⌂ <span>Resumen</span></a>
+        <a href="#orders" class="account-nav-link" data-account-section="orders">📦 <span>Mis pedidos</span></a>
+        <a href="#profile" class="account-nav-link" data-account-section="profile">👤 <span>Mi perfil</span></a>
+      </nav>
+
+      <button id="account-logout" type="button" class="account-logout">⇥ Cerrar sesión</button>
+    </aside>
+
+    <section class="account-content">
+      <section id="overview" class="account-section account-section-active">
+        <div class="account-hero">
+          <div>
+            <span class="account-eyebrow">MI CUENTA</span>
+            <h1 id="account-greeting">Hola</h1>
+            <p>Consulta tus compras y administra tu cuenta de Urban Society desde un solo lugar.</p>
+          </div>
+          <a href="UrbanSociety.html#productos" class="account-primary-link">VER PRODUCTOS</a>
+        </div>
+
+        <div class="account-metrics">
+          <article><span>Pedidos</span><strong id="account-orders-count">0</strong><small>Compras realizadas con esta cuenta</small></article>
+          <article><span>Total comprado</span><strong id="account-spent-total">$0.00</strong><small>Sin contar pedidos cancelados</small></article>
+          <article><span>Pedidos activos</span><strong id="account-active-orders">0</strong><small>En proceso o pendientes</small></article>
+        </div>
+
+        <div class="account-grid">
+          <section class="account-panel">
+            <div class="account-panel-head">
+              <div><span class="account-eyebrow">ÚLTIMA COMPRA</span><h2>Pedido reciente</h2></div>
+              <a href="#orders" data-go-orders>Ver todos →</a>
+            </div>
+            <div id="account-latest-order" class="account-loading">Cargando...</div>
+          </section>
+
+          <section class="account-panel account-benefit-panel">
+            <span class="account-eyebrow">URBAN SOCIETY</span>
+            <h2>Tu cuenta, tus compras</h2>
+            <p>Al comprar con tu sesión iniciada, tus pedidos quedan guardados aquí para que puedas consultar su estado fácilmente.</p>
+            <a href="UrbanSociety.html" class="account-secondary-link">IR A LA TIENDA</a>
+          </section>
+        </div>
+      </section>
+
+      <section id="orders" class="account-section">
+        <div class="account-section-head">
+          <div><span class="account-eyebrow">HISTORIAL</span><h1>Mis pedidos</h1><p>Revisa productos, total, método de pago y estado de cada compra.</p></div>
+          <button id="account-refresh-orders" type="button" class="account-secondary-button">↻ Actualizar</button>
+        </div>
+        <div id="account-orders-list" class="account-orders-list">
+          <div class="account-loading">Cargando pedidos...</div>
+        </div>
+      </section>
+
+      <section id="profile" class="account-section">
+        <div class="account-section-head">
+          <div><span class="account-eyebrow">DATOS PERSONALES</span><h1>Mi perfil</h1><p>Mantén actualizado el nombre que aparece en tu cuenta.</p></div>
+        </div>
+
+        <section class="account-panel account-profile-form-panel">
+          <form id="account-profile-form" class="account-profile-form">
+            <label>Nombre
+              <input id="account-profile-name" type="text" maxlength="120" required>
+            </label>
+            <label>Correo electrónico
+              <input id="account-profile-email" type="email" readonly>
+              <small>El correo identifica tu cuenta y no se cambia desde esta pantalla.</small>
+            </label>
+            <div class="account-profile-actions">
+              <span id="account-profile-status"></span>
+              <button id="account-profile-save" type="submit" class="account-primary-button">GUARDAR CAMBIOS</button>
+            </div>
+          </form>
+        </section>
+      </section>
+    </section>
+  </main>
+
+  <div id="account-toast" class="account-toast" role="status" aria-live="polite"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/backendless.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/account.js"></script>
+</body>
+</html>

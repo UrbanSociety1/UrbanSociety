@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#08080b">
+  <title>Urban Society | Configuración</title>
+  <link rel="stylesheet" href="css/settings.css">
+  <link rel="stylesheet" href="css/suite.css">
+</head>
+<body>
+  <main class="settings-shell">
+    <div class="settings-head">
+      <div><span class="settings-eyebrow">SISTEMA</span><h1>Configuración</h1><p class="settings-subtitle">Datos del negocio, alertas y contenido de los tickets.</p></div>
+      <span class="urban-bo-page-badge">⚙ Ajustes de tienda</span>
+    </div>
+
+    <section class="settings-card">
+      <form id="settings-form">
+        <div class="settings-grid">
+          <div class="settings-field"><label for="settings-store-name">Nombre del negocio</label><input id="settings-store-name" type="text" maxlength="100" required></div>
+          <div class="settings-field"><label for="settings-slogan">Slogan</label><input id="settings-slogan" type="text" maxlength="160" placeholder="Streetwear & Sneakers"></div>
+          <div class="settings-field"><label for="settings-phone">Teléfono</label><input id="settings-phone" type="tel" maxlength="30" placeholder="Ej. 833 000 0000"></div>
+          <div class="settings-field"><label for="settings-low-stock">Avisar stock bajo desde</label><input id="settings-low-stock" type="number" min="0" max="9999" step="1" value="5"><small class="settings-help">Aparecerá una alerta cuando un producto activo llegue a este número o menos.</small></div>
+          <div class="settings-field full"><label for="settings-address">Dirección de la tienda</label><textarea id="settings-address" rows="3" maxlength="300" placeholder="Dirección del local físico"></textarea></div>
+          <div class="settings-field full"><label for="settings-store-url">Enlace de la tienda online</label><input id="settings-store-url" type="url" maxlength="300" placeholder="https://tudominio.com"><small class="settings-help">Si lo llenas, el ticket mostrará un QR hacia tu tienda.</small></div>
+          <div class="settings-field full"><label for="settings-ticket-footer">Mensaje al final del ticket</label><textarea id="settings-ticket-footer" rows="2" maxlength="300" placeholder="Gracias por tu compra."></textarea></div>
+          <div class="settings-field full"><label for="settings-return-policy">Política de cambios / devoluciones</label><textarea id="settings-return-policy" rows="3" maxlength="600" placeholder="Cambios sujetos a disponibilidad..."></textarea></div>
+          <div class="settings-field"><label>Datos visibles en ticket</label><label class="suite-check"><input id="settings-show-phone" type="checkbox" checked> Mostrar teléfono</label></div>
+          <div class="settings-field"><label>&nbsp;</label><label class="suite-check"><input id="settings-show-address" type="checkbox" checked> Mostrar dirección</label></div>
+        </div>
+
+        <div class="settings-actions"><span id="settings-status" class="settings-status">Cargando configuración...</span><button id="settings-save" type="submit" class="settings-save">GUARDAR CONFIGURACIÓN</button></div>
+      </form>
+
+      <div class="settings-preview">
+        <h3>Vista rápida del ticket</h3>
+        <div class="ticket-preview">
+          <h2 id="preview-store-name">URBAN SOCIETY</h2><p id="preview-slogan">Streetwear & Sneakers</p><p id="preview-phone"></p><p id="preview-address"></p><hr><p>Ticket de ejemplo</p><p>1 × Producto &nbsp; $1,000.00</p><hr><p><b>TOTAL $1,000.00</b></p><p id="preview-footer">Gracias por tu compra.</p><p id="preview-policy" style="font-size:10px"></p><p id="preview-qr" style="font-size:10px"></p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/backendless.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/settings.js"></script>
+</body>
+</html>

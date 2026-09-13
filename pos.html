@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#050505">
+  <title>Urban Society | Punto de Venta</title>
+  <link rel="stylesheet" href="css/pos.css">
+  <link rel="stylesheet" href="css/pos-upgrade.css">
+</head>
+<body class="pos-screen">
+  <header class="pos-header"><div class="pos-brand"><img src="images/Logo Urban.png" alt="Urban Society"><div><strong>URBAN SOCIETY</strong><span>Punto de venta · Tienda física</span></div></div></header>
+  <main class="pos-layout">
+    <section class="pos-catalog-panel">
+      <div class="pos-section-head"><div><span class="eyebrow">VENTA EN MOSTRADOR</span><h1>Punto de venta</h1></div><button id="pos-refresh" type="button" class="ghost-button">↻ Actualizar</button></div>
+      <div id="pos-cash-status" class="pos-cash-mini closed"><div><strong>Revisando caja...</strong><span>La caja debe estar abierta para cobrar.</span></div><a href="cash.html">Caja y cortes →</a></div>
+      <div class="pos-summary" aria-label="Resumen del día"><article><span>Ventas hoy</span><strong id="pos-today-count">0</strong></article><article><span>Total hoy</span><strong id="pos-today-total">$0.00</strong></article><article><span>Productos activos</span><strong id="pos-product-count">0</strong></article></div>
+      <div class="pos-search-wrap"><input id="pos-search" type="search" placeholder="Buscar nombre, SKU o escanear código de barras..." autocomplete="off"><small class="pos-search-hint">Con lector USB: escanea el código y presiona Enter. Si el producto no usa talla se agrega automáticamente.</small></div>
+      <div id="pos-products" class="pos-products"><div class="pos-empty">Cargando productos...</div></div>
+    </section>
+    <aside class="pos-cart-panel"><div class="pos-cart-sticky">
+      <div class="pos-section-head compact"><div><span class="eyebrow">VENTA ACTUAL</span><h2>Carrito</h2></div><button id="pos-clear" type="button" class="text-button">Vaciar</button></div>
+      <div id="pos-cart-items" class="pos-cart-items"><div class="pos-empty small">Aún no agregas productos.</div></div>
+      <div class="pos-breakdown">
+        <div class="pos-breakdown-row"><span>Subtotal</span><strong id="pos-subtotal">$0.00</strong></div>
+        <div id="pos-line-discount-row" class="pos-breakdown-row discount" hidden><span>Descuentos productos</span><strong id="pos-line-discount-amount">−$0.00</strong></div>
+        <div id="pos-discount-row" class="pos-breakdown-row discount" hidden><span>Descuento venta</span><strong id="pos-discount-amount">−$0.00</strong></div>
+        <div class="pos-breakdown-row total"><span>Total</span><strong id="pos-total">$0.00</strong></div>
+      </div>
+      <form id="pos-sale-form" class="pos-sale-form">
+        <label>Cliente (opcional)<input id="pos-customer" type="text" maxlength="120" placeholder="Nombre del cliente"></label>
+        <div class="pos-discount-grid"><label>Descuento de venta<select id="pos-discount-type"><option value="Ninguno">Sin descuento</option><option value="Porcentaje">Porcentaje %</option><option value="Monto">Monto $</option></select></label><label id="pos-discount-value-field" class="pos-discount-value" hidden>Valor<input id="pos-discount-value" type="number" min="0" step="0.01" inputmode="decimal" value="0"></label></div>
+        <label>Método de pago<select id="pos-payment" required><option value="Efectivo">Efectivo</option><option value="Tarjeta">Tarjeta</option><option value="Transferencia">Transferencia</option></select></label>
+        <label id="pos-cash-field">Efectivo recibido<input id="pos-cash" type="number" min="0" step="0.01" inputmode="decimal" placeholder="0.00"></label>
+        <div class="pos-change-row"><span>Cambio</span><strong id="pos-change">$0.00</strong></div>
+        <label>Notas (opcional)<textarea id="pos-notes" rows="2" maxlength="500" placeholder="Referencia, observación, etc."></textarea></label>
+        <button id="pos-complete-sale" type="submit" class="primary-button" disabled>COBRAR VENTA</button>
+      </form>
+    </div></aside>
+  </main>
+  <section class="pos-history-section"><div class="pos-history-head"><div><span class="eyebrow">HISTORIAL</span><h2>Ventas recientes</h2></div><a href="returns.html" class="ghost-button">Devoluciones</a></div><div id="pos-history" class="pos-history"><div class="pos-empty">Cargando ventas...</div></div></section>
+  <div id="pos-toast" class="pos-toast" role="status" aria-live="polite"></div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="js/config.js"></script><script src="js/backendless.js"></script><script src="js/auth.js"></script><script src="js/pos.js"></script>
+</body>
+</html>

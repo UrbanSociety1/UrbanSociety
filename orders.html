@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#08080b">
+  <title>Urban Society | Pedidos</title>
+  <link rel="stylesheet" href="css/admin-pages.css">
+</head>
+<body>
+  <main class="admin-page-shell">
+    <header class="admin-page-head">
+      <div>
+        <span class="admin-page-eyebrow">TIENDA ONLINE</span>
+        <h1>Pedidos</h1>
+        <p>Consulta pedidos, productos comprados, datos del cliente y cambia el estado de cada orden desde esta pantalla.</p>
+      </div>
+      <button type="button" class="admin-page-action" onclick="cargarPedidosAdmin()">↻ Actualizar</button>
+    </header>
+
+    <section class="admin-page-summary">
+      <article class="admin-summary-card">
+        <span>Pedidos registrados</span>
+        <strong id="admin-orders-count">0</strong>
+      </article>
+      <article class="admin-summary-card">
+        <span>Ventas online</span>
+        <strong id="admin-sales-total">$0.00</strong>
+      </article>
+      <article class="admin-summary-card">
+        <span>Seguimiento</span>
+        <strong>En vivo</strong>
+      </article>
+    </section>
+
+    <section class="admin-page-card">
+      <div class="admin-page-card-head">
+        <div>
+          <h2>Pedidos recibidos</h2>
+          <p>Los pedidos más recientes aparecen primero. Puedes cambiar su estado directamente.</p>
+        </div>
+      </div>
+      <div id="admin-orders" class="admin-orders">
+        <div class="empty-products">Cargando pedidos...</div>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/backendless.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>

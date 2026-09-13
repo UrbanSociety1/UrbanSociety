@@ -1,0 +1,1265 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Urban Society | Administración
+    </title>
+
+    <meta
+        name="theme-color"
+        content="#000000"
+    >
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+
+        body {
+
+            margin: 0;
+
+            font-family:
+                Arial,
+                Helvetica,
+                sans-serif;
+
+            background:
+                #080808;
+
+            color: white;
+
+        }
+
+
+        button,
+        input,
+        textarea,
+        select {
+
+            font-family: inherit;
+
+        }
+
+
+        button {
+
+            cursor: pointer;
+
+        }
+
+
+        /* ==================================
+           HEADER
+        ================================== */
+
+        .admin-header {
+
+            position: sticky;
+
+            top: 0;
+
+            z-index: 100;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: space-between;
+
+            gap: 20px;
+
+            padding:
+                16px 25px;
+
+            background:
+                rgba(0,0,0,.95);
+
+            border-bottom:
+                1px solid #252525;
+
+            backdrop-filter:
+                blur(15px);
+
+        }
+
+
+        .brand {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 12px;
+
+        }
+
+
+        .brand img {
+
+            width: 60px;
+
+            height: 60px;
+
+            object-fit: contain;
+
+        }
+
+
+        .brand h1 {
+
+            margin: 0;
+
+            font-size: 20px;
+
+        }
+
+
+        .brand span {
+
+            display: block;
+
+            margin-top: 3px;
+
+            color: #aaa;
+
+            font-size: 12px;
+
+        }
+
+
+        .back-button {
+
+            border: 1px solid #333;
+
+            background: #151515;
+
+            color: white;
+
+            padding:
+                10px 15px;
+
+            border-radius: 10px;
+
+            text-decoration: none;
+
+        }
+
+
+        .back-button:hover {
+
+            background: #222;
+
+        }
+
+
+        /* ==================================
+           CONTENEDOR
+        ================================== */
+
+        .admin-container {
+
+            width: 100%;
+
+            max-width: 1200px;
+
+            margin: auto;
+
+            padding: 30px 20px 70px;
+
+        }
+
+
+        .admin-title {
+
+            margin-bottom: 25px;
+
+        }
+
+
+        .admin-title h2 {
+
+            margin: 0 0 7px;
+
+            font-size: 30px;
+
+        }
+
+
+        .admin-title p {
+
+            margin: 0;
+
+            color: #999;
+
+        }
+
+
+        /* ==================================
+           STATS
+        ================================== */
+
+        .stats {
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(3, 1fr);
+
+            gap: 15px;
+
+            margin-bottom: 30px;
+
+        }
+
+
+        .stat-card {
+
+            padding: 20px;
+
+            border:
+                1px solid #262626;
+
+            border-radius: 15px;
+
+            background:
+                linear-gradient(
+                    145deg,
+                    #151515,
+                    #0d0d0d
+                );
+
+        }
+
+
+        .stat-card span {
+
+            color: #999;
+
+            font-size: 13px;
+
+        }
+
+
+        .stat-card strong {
+
+            display: block;
+
+            margin-top: 8px;
+
+            font-size: 28px;
+
+        }
+
+
+        /* ==================================
+           SECCIONES
+        ================================== */
+
+        .admin-section {
+
+            margin-top: 30px;
+
+            padding: 25px;
+
+            background: #101010;
+
+            border:
+                1px solid #242424;
+
+            border-radius: 18px;
+
+        }
+
+
+        .section-header {
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: space-between;
+
+            gap: 15px;
+
+            margin-bottom: 20px;
+
+        }
+
+
+        .section-header h2 {
+
+            margin: 0;
+
+            font-size: 21px;
+
+        }
+
+
+        /* ==================================
+           FORMULARIO
+        ================================== */
+
+        .product-form {
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(2, 1fr);
+
+            gap: 15px;
+
+        }
+
+
+        .form-group {
+
+            display: flex;
+
+            flex-direction: column;
+
+            gap: 7px;
+
+        }
+
+
+        .form-group.full {
+
+            grid-column:
+                1 / -1;
+
+        }
+
+
+        .form-group label {
+
+            color: #ccc;
+
+            font-size: 13px;
+
+            font-weight: bold;
+
+        }
+
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+
+            width: 100%;
+
+            padding: 13px;
+
+            color: white;
+
+            background: #181818;
+
+            border:
+                1px solid #333;
+
+            border-radius: 10px;
+
+            outline: none;
+
+        }
+
+
+        .form-group textarea {
+
+            min-height: 110px;
+
+            resize: vertical;
+
+        }
+
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+
+            border-color:
+                #777;
+
+        }
+
+
+        .form-actions {
+
+            grid-column:
+                1 / -1;
+
+            display: flex;
+
+            gap: 10px;
+
+        }
+
+
+        .primary-button {
+
+            border: none;
+
+            padding:
+                13px 20px;
+
+            border-radius: 10px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #ffffff,
+                    #bdbdbd
+                );
+
+            color: #000;
+
+            font-weight: bold;
+
+        }
+
+
+        .secondary-button {
+
+            border:
+                1px solid #333;
+
+            padding:
+                13px 20px;
+
+            border-radius: 10px;
+
+            background: #181818;
+
+            color: white;
+
+        }
+
+
+        /* ==================================
+           PRODUCTOS
+        ================================== */
+
+        .admin-products {
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(3, 1fr);
+
+            gap: 18px;
+
+        }
+
+
+        .admin-product-card {
+
+            overflow: hidden;
+
+            border:
+                1px solid #292929;
+
+            border-radius: 15px;
+
+            background: #151515;
+
+        }
+
+
+        .admin-product-card > img {
+
+            width: 100%;
+
+            height: 230px;
+
+            display: block;
+
+            object-fit: cover;
+
+            background: #0c0c0c;
+
+        }
+
+
+        .admin-product-info {
+
+            padding: 16px;
+
+        }
+
+
+        .admin-product-info > span {
+
+            color: #999;
+
+            font-size: 12px;
+
+        }
+
+
+        .admin-product-info h3 {
+
+            margin:
+                7px 0;
+
+            font-size: 17px;
+
+        }
+
+
+        .admin-product-info strong {
+
+            font-size: 18px;
+
+        }
+
+
+        .admin-product-info p {
+
+            color: #aaa;
+
+            font-size: 14px;
+
+        }
+
+
+        .admin-product-actions {
+
+            display: flex;
+
+            gap: 8px;
+
+            margin-top: 15px;
+
+        }
+
+
+        .admin-product-actions button {
+
+            flex: 1;
+
+            padding: 10px;
+
+            border:
+                1px solid #333;
+
+            border-radius: 8px;
+
+            background: #202020;
+
+            color: white;
+
+        }
+
+
+        .admin-product-actions button:hover {
+
+            background: #2b2b2b;
+
+        }
+
+
+        /* ==================================
+           PEDIDOS
+        ================================== */
+
+        .admin-orders {
+
+            display: grid;
+
+            gap: 15px;
+
+        }
+
+
+        .admin-order-card {
+
+            padding: 18px;
+
+            border:
+                1px solid #292929;
+
+            border-radius: 14px;
+
+            background: #151515;
+
+        }
+
+
+        .admin-order-header {
+
+            display: flex;
+
+            justify-content: space-between;
+
+            gap: 15px;
+
+            padding-bottom: 14px;
+
+            border-bottom:
+                1px solid #292929;
+
+        }
+
+
+        .order-status {
+
+            padding:
+                5px 9px;
+
+            border-radius: 20px;
+
+            background: #292929;
+
+            color: white;
+
+            font-size: 12px;
+
+        }
+
+
+        .admin-order-body {
+
+            padding-top: 12px;
+
+        }
+
+
+        .admin-order-body p {
+
+            margin:
+                8px 0;
+
+            color: #bbb;
+
+            line-height: 1.5;
+
+        }
+
+
+        .admin-order-body b {
+
+            color: white;
+
+        }
+
+
+        .admin-order-body label {
+
+            display: block;
+
+            margin-top: 15px;
+
+            margin-bottom: 7px;
+
+            color: #aaa;
+
+            font-size: 13px;
+
+        }
+
+
+        .admin-order-body select {
+
+            width: 100%;
+
+            padding: 11px;
+
+            border:
+                1px solid #333;
+
+            border-radius: 9px;
+
+            background: #202020;
+
+            color: white;
+
+        }
+
+
+        /* ==================================
+           VACÍOS
+        ================================== */
+
+        .empty-products {
+
+            padding: 35px;
+
+            text-align: center;
+
+            color: #999;
+
+            border:
+                1px dashed #333;
+
+            border-radius: 12px;
+
+        }
+
+
+        .empty-products h3 {
+
+            margin-top: 0;
+
+            color: white;
+
+        }
+
+
+        /* ==================================
+           RESPONSIVE
+        ================================== */
+
+        @media (
+            max-width: 850px
+        ) {
+
+            .admin-products {
+
+                grid-template-columns:
+                    repeat(2, 1fr);
+
+            }
+
+        }
+
+
+        @media (
+            max-width: 650px
+        ) {
+
+            .admin-header {
+
+                padding:
+                    12px 15px;
+
+            }
+
+
+            .brand img {
+
+                width: 48px;
+
+                height: 48px;
+
+            }
+
+
+            .admin-title h2 {
+
+                font-size: 25px;
+
+            }
+
+
+            .stats {
+
+                grid-template-columns:
+                    1fr;
+
+            }
+
+
+            .product-form {
+
+                grid-template-columns:
+                    1fr;
+
+            }
+
+
+            .form-group.full {
+
+                grid-column:
+                    auto;
+
+            }
+
+
+            .form-actions {
+
+                grid-column:
+                    auto;
+
+                flex-direction: column;
+
+            }
+
+
+            .admin-products {
+
+                grid-template-columns:
+                    1fr;
+
+            }
+
+
+            .admin-section {
+
+                padding: 18px;
+
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+    <!-- ==================================
+         HEADER
+    ================================== -->
+
+    <header class="admin-header">
+
+        <div class="brand">
+
+            <img
+                src="images/Logo Urban.png"
+                alt="Urban Society"
+                onerror="
+                    this.style.display='none'
+                "
+            >
+
+            <div>
+
+                <h1>
+                    Urban Society
+                </h1>
+
+                <span>
+                    Panel del propietario
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <a
+            href="UrbanSociety.html"
+            class="back-button"
+        >
+            ← Tienda
+        </a>
+
+    </header>
+
+
+
+    <!-- ==================================
+         CONTENIDO
+    ================================== -->
+
+    <main class="admin-container">
+
+
+        <div class="admin-title">
+
+            <h2>
+                Panel de administración
+            </h2>
+
+            <p>
+                Administra productos y pedidos
+                desde un solo lugar.
+            </p>
+
+        </div>
+
+
+
+        <!-- ==================================
+             ESTADÍSTICAS
+        ================================== -->
+
+        <section class="stats">
+
+            <div class="stat-card">
+
+                <span>
+                    Productos
+                </span>
+
+                <strong
+                    id="admin-products-count"
+                >
+                    0
+                </strong>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <span>
+                    Pedidos
+                </span>
+
+                <strong
+                    id="admin-orders-count"
+                >
+                    0
+                </strong>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <span>
+                    Ventas
+                </span>
+
+                <strong
+                    id="admin-sales-total"
+                >
+                    $0.00
+                </strong>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- ==================================
+             PRODUCTO
+        ================================== -->
+
+        <section class="admin-section">
+
+            <div class="section-header">
+
+                <h2>
+                    👟 Agregar producto
+                </h2>
+
+            </div>
+
+
+            <form
+                id="product-form"
+                class="product-form"
+            >
+
+                <input
+                    type="hidden"
+                    id="product-id"
+                >
+
+
+                <div class="form-group">
+
+                    <label
+                        for="product-name"
+                    >
+                        Nombre
+                    </label>
+
+                    <input
+                        id="product-name"
+                        type="text"
+                        placeholder="Ej. Nike Air Max"
+                        required
+                    >
+
+                </div>
+
+
+
+                <div class="form-group">
+
+                    <label
+                        for="product-category"
+                    >
+                        Categoría
+                    </label>
+
+                    <input
+                        id="product-category"
+                        type="text"
+                        placeholder="Ej. Tenis"
+                    >
+
+                </div>
+
+
+
+                <div class="form-group">
+
+                    <label
+                        for="product-price"
+                    >
+                        Precio MXN
+                    </label>
+
+                    <input
+                        id="product-price"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        placeholder="1299"
+                        required
+                    >
+
+                </div>
+
+
+
+                <div class="form-group">
+
+                    <label
+                        for="product-stock"
+                    >
+                        Stock
+                    </label>
+
+                    <input
+                        id="product-stock"
+                        type="number"
+                        min="0"
+                        step="1"
+                        placeholder="10"
+                        required
+                    >
+
+                </div>
+
+
+<div class="form-group full">
+
+    <label for="product-image-file">
+        📷 Fotografía del producto
+    </label>
+
+    <input
+        id="product-image-file"
+        type="file"
+        accept="image/*"
+    >
+
+    <small id="image-upload-status">
+        Selecciona una fotografía desde tu computadora.
+    </small>
+
+    <div id="image-preview-container"
+         style="display:none; margin-top:10px;">
+
+        <img
+            id="image-preview"
+            src=""
+            alt="Vista previa"
+            style="
+                width:180px;
+                height:180px;
+                object-fit:cover;
+                border-radius:12px;
+                border:1px solid #333;
+            "
+        >
+
+    </div>
+
+    <input
+        type="hidden"
+        id="product-image"
+    >
+
+</div>
+                
+
+
+                <div class="form-group full">
+
+                    <label
+                        for="product-description"
+                    >
+                        Descripción
+                    </label>
+
+                    <textarea
+                        id="product-description"
+                        placeholder="Describe el producto..."
+                    ></textarea>
+
+                </div>
+
+
+
+                <div class="form-actions">
+
+                    <button
+                        type="submit"
+                        class="primary-button"
+                    >
+                        Agregar producto
+                    </button>
+
+
+                    <button
+                        type="reset"
+                        class="secondary-button"
+                        onclick="
+                            document.getElementById(
+                                'product-id'
+                            ).value='';
+                            document.querySelector(
+                                '#product-form button[type=submit]'
+                            ).textContent='Agregar producto';
+                        "
+                    >
+                        Limpiar
+                    </button>
+
+                </div>
+
+            </form>
+
+        </section>
+
+
+
+        <!-- ==================================
+             PRODUCTOS
+        ================================== -->
+
+        <section class="admin-section">
+
+            <div class="section-header">
+
+                <h2>
+                    👟 Mis productos
+                </h2>
+
+                <button
+                    type="button"
+                    class="secondary-button"
+                    onclick="
+                        cargarProductosAdmin()
+                    "
+                >
+                    ↻ Actualizar
+                </button>
+
+            </div>
+
+
+            <div
+                id="admin-products"
+                class="admin-products"
+            >
+
+                <div class="empty-products">
+
+                    Cargando productos...
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- ==================================
+             PEDIDOS
+        ================================== -->
+
+        <section class="admin-section">
+
+            <div class="section-header">
+
+                <h2>
+                    📦 Pedidos recibidos
+                </h2>
+
+                <button
+                    type="button"
+                    class="secondary-button"
+                    onclick="
+                        cargarPedidosAdmin()
+                    "
+                >
+                    ↻ Actualizar
+                </button>
+
+            </div>
+
+
+            <div
+                id="admin-orders"
+                class="admin-orders"
+            >
+
+                <div class="empty-products">
+
+                    Cargando pedidos...
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+    </main>
+
+
+
+    <!-- ==================================
+         BACKENDLESS
+    ================================== -->
+
+    <script
+        src="https://cdn.jsdelivr.net/npm/backendless@7.0.2/dist/backendless.min.js"
+        crossorigin="anonymous"
+    ></script>
+
+
+    <!-- CONFIG -->
+
+    <script
+        src="js/config.js"
+    ></script>
+
+
+    <!-- BACKENDLESS -->
+
+    <script
+        src="js/backendless.js"
+    ></script>
+
+
+    <!-- AUTH -->
+
+    <script
+        src="js/auth.js"
+    ></script>
+
+
+    <!-- ADMIN -->
+
+    <script
+        src="js/admin.js"
+    ></script>
+
+
+</body>
+
+</html>

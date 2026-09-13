@@ -1,0 +1,19 @@
+{
+  "name": "Urban Society",
+  "short_name": "Urban",
+  "description": "Urban Society - Streetwear & Sneakers",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#08080b",
+  "theme_color": "#08080b",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "images/Logo Urban.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
