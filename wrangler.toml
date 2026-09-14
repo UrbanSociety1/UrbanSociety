@@ -1,5 +1,5 @@
-name = "urbansociety-2"
+name = "urbansociety"
 compatibility_date = "2026-09-13"
 
 [assets]
-directory = "."
+directory = "./public"
