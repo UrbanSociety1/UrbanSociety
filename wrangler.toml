@@ -3,3 +3,7 @@ compatibility_date = "2026-09-13"
 
 [assets]
 directory = "./public"
+[[d1_databases]]
+binding = "urbansociety_db"
+database_name = "urbansociety-db"
+database_id = "0ce96c9c-b7fb-4678-99e8-47328aef720b"
