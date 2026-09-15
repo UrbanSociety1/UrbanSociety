@@ -1,73 +1,342 @@
+```javascript
 /* =========================================================
    URBAN SOCIETY
-   BACKENDLESS.JS
-   Inicialización, sesión y compatibilidad de interfaz
+   BACKENDLESS REAL BACKEND
+   =========================================================
+
+   Esta versión NO utiliza Supabase.
+
+   Utiliza directamente:
+
+   - Backendless SDK
+   - Backendless User Service
+   - Backendless Data Service
+   - Backendless File Service
+
+   Además mantiene una pequeña capa de compatibilidad
+   con el código antiguo de Urban Society.
 ========================================================= */
 
-let backendlessReady = false;
+(function () {
 
-function cargarEstilosMejorados() {
-  const estilos = ["css/upgrade.css", "css/contact-form.css"];
+  "use strict";
 
-  estilos.forEach(href => {
-    if (document.querySelector(`link[href="${href}"]`)) return;
 
-    const link = document.createElement("link");
-    link.rel = "stylesheet";
-    link.href = href;
-    document.head.appendChild(link);
-  });
-}
+  /* =======================================================
+     EVITAR CARGAR EL BACKEND DOS VECES
+  ======================================================= */
 
-function iniciarBackendless() {
-  if (backendlessReady) return true;
+  if (window.__urbanBackendlessInstalled) {
 
-  if (typeof Backendless === "undefined") {
-    console.error("Backendless SDK no está cargado.");
-    return false;
-  }
-
-  if (typeof BACKENDLESS_CONFIG === "undefined") {
-    console.error("BACKENDLESS_CONFIG no está definido.");
-    return false;
-  }
-
-  try {
-    Backendless.initApp(
-      BACKENDLESS_CONFIG.APPLICATION_ID,
-      BACKENDLESS_CONFIG.JS_API_KEY
+    console.warn(
+      "Urban Society: Backendless ya estaba instalado."
     );
-    backendlessReady = true;
-    console.info("Backendless conectado.");
-    return true;
-  } catch (error) {
-    console.error("No se pudo iniciar Backendless:", error);
-    return false;
-  }
-}
 
-async function obtenerUsuarioActual() {
-  if (!iniciarBackendless()) return null;
+    return;
+  }
+
+  window.__urbanBackendlessInstalled = true;
+
+
+  /* =======================================================
+     COMPROBAR SDK
+  ======================================================= */
+
+  if (
+    typeof window.Backendless === "undefined"
+  ) {
+
+    console.error(
+      "ERROR: El SDK de Backendless no está cargado."
+    );
+
+    return;
+  }
+
+
+  /* =======================================================
+     COMPROBAR CONFIGURACIÓN
+  ======================================================= */
+
+  if (
+    typeof window.BACKENDLESS_CONFIG === "undefined"
+  ) {
+
+    console.error(
+      "ERROR: BACKENDLESS_CONFIG no está definido."
+    );
+
+    return;
+  }
+
+
+  /* =======================================================
+     CONFIGURACIÓN
+  ======================================================= */
+
+  const CONFIG = window.BACKENDLESS_CONFIG;
+
+
+  /* =======================================================
+     INICIALIZAR BACKENDLESS
+  ======================================================= */
 
   try {
-    return await Backendless.UserService.getCurrentUser();
+
+    Backendless.initApp(
+      CONFIG.SUBDOMAIN
+    );
+
+    console.info(
+      "Urban Society conectado a Backendless."
+    );
+
+    console.info(
+      "Backend:",
+      CONFIG.SUBDOMAIN
+    );
+
   } catch (error) {
-    console.warn("No se pudo recuperar la sesión:", error);
-    return null;
+
+    console.error(
+      "ERROR inicializando Backendless:",
+      error
+    );
+
+    return;
   }
-}
 
-async function comprobarSesionBackendless() {
-  return Boolean(await obtenerUsuarioActual());
-}
 
-async function verificarOwner() {
-  const usuario = await obtenerUsuarioActual();
+  /* =======================================================
+     FECHAS
+  ======================================================= */
 
-  if (!usuario) {
-    alert("Debes iniciar sesión para entrar al panel.");
-    window.location.replace("UrbanSociety.html");
-    return false;
+  function fechaMs(value) {
+
+    if (!value) {
+      return null;
+    }
+
+    const time = new Date(value).getTime();
+
+    return Number.isFinite(time)
+      ? time
+      : null;
+  }
+
+
+  /* =======================================================
+     USUARIO
+  ======================================================= */
+
+  function usuarioLegacy(user) {
+
+    if (!user) {
+      return null;
+    }
+
+    return {
+
+      objectId:
+        user.objectId ||
+        user.id ||
+        "",
+
+      id:
+        user.objectId ||
+        user.id ||
+        "",
+
+      email:
+        user.email ||
+        "",
+
+      name:
+        user.name ||
+        user.fullName ||
+        user.username ||
+        "",
+
+      phone:
+        user.phone ||
+        user.phoneNumber ||
+        "",
+
+      username:
+        user.username ||
+        "",
+
+      userToken:
+        user["user-token"] ||
+        user.userToken ||
+        ""
+
+    };
+  }
+
+
+  /* =======================================================
+     PRODUCTO
+  ======================================================= */
+
+  function productoLegacy(row) {
+
+    if (!row) {
+      return row;
+    }
+
+    return {
+
+      objectId:
+        row.objectId ||
+        row.id ||
+        "",
+
+      id:
+        row.objectId ||
+        row.id ||
+        "",
+
+      created:
+        fechaMs(row.created),
+
+      updated:
+        fechaMs(row.updated),
+
+      name:
+        row.name || "",
+
+      category:
+        row.category || "General",
+
+      description:
+        row.description || "",
+
+      image:
+        row.image ||
+        row.imageUrl ||
+        "",
+
+      imageUrl:
+        row.imageUrl ||
+        row.image ||
+        "",
+
+      price:
+        Number(row.price || 0),
+
+      stock:
+        Number(row.stock || 0),
+
+      sizes:
+        String(row.sizes || ""),
+
+      sku:
+        String(row.sku || ""),
+
+      barcode:
+        String(row.barcode || ""),
+
+      active:
+        row.active !== false
+
+    };
+  }
+
+
+  /* =======================================================
+     PEDIDO
+  ======================================================= */
+
+  function pedidoLegacy(row) {
+
+    if (!row) {
+      return row;
+    }
+
+    return {
+
+      objectId:
+        row.objectId ||
+        row.id ||
+        "",
+
+      id:
+        row.objectId ||
+        row.id ||
+        "",
+
+      created:
+        fechaMs(row.created),
+
+      updated:
+        fechaMs(row.updated),
+
+      customerName:
+        row.customerName || "",
+
+      customerEmail:
+        row.customerEmail || "",
+
+      customerPhone:
+        row.customerPhone || "",
+
+      address:
+        row.address || "",
+
+      paymentMethod:
+        row.paymentMethod || "",
+
+      products:
+        row.products || [],
+
+      total:
+        Number(row.total || 0),
+
+      status:
+        row.status || "pending",
+
+      userId:
+        row.userId ||
+        row.ownerId ||
+        null
+
+    };
+  }
+
+
+  /* =======================================================
+     NOMBRE DE TABLA
+  ======================================================= */
+
+  function nombreTabla(tableName) {
+
+    const name =
+      String(tableName || "")
+        .toLowerCase()
+        .trim();
+
+
+    if (
+      name === "products" ||
+      name === "product"
+    ) {
+
+      return CONFIG.TABLES.PRODUCTS;
+    }
+
+
+    if (
+      name === "orders" ||
+      name === "order" ||
+      name === "pedidos"
+    ) {
+
+      return CONFIG.TABLES.ORDERS;
+    }
+
+
+    return tableName;
   }
 
   const email = String(usuario.email || "").trim().toLowerCase();
@@ -127,9 +396,11 @@ function crearFormularioContacto() {
 
   tarjeta.innerHTML = `
     <div class="contact-copy">
-      <p class="eyebrow">MENSAJE DIRECTO</p>
-      <h3>¿Tienes una pregunta?</h3>
-      <p class="muted">Escríbenos sobre disponibilidad, productos o pedidos.</p>
+      <div class="contact-copy-content">
+        <p class="eyebrow">MENSAJE DIRECTO</p>
+        <h3>¿Tienes una pregunta?</h3>
+        <p class="muted">Escríbenos sobre disponibilidad, productos o pedidos.</p>
+      </div>
     </div>
 
     <form id="contact-form" class="contact-form" novalidate>

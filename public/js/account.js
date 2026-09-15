@@ -1,7 +1,9 @@
 /* =========================================================
    URBAN SOCIETY
    CUSTOMER ACCOUNT DASHBOARD
+   BACKENDLESS
 ========================================================= */
+
 (function () {
   if (window.__urbanCustomerAccountInstalled) return;
   window.__urbanCustomerAccountInstalled = true;
@@ -29,8 +31,13 @@
 
   function formatDate(value) {
     if (!value) return 'Fecha no disponible';
+
     const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return 'Fecha no disponible';
+
+    if (Number.isNaN(date.getTime())) {
+      return 'Fecha no disponible';
+    }
+
     return new Intl.DateTimeFormat('es-MX', {
       dateStyle: 'medium',
       timeStyle: 'short'
@@ -47,8 +54,8 @@
 
   function displayName() {
     return String(
-      accountUser?.user_metadata?.name ||
-      accountUser?.user_metadata?.full_name ||
+      accountUser?.name ||
+      accountUser?.full_name ||
       accountUser?.email?.split('@')[0] ||
       'Usuario'
     ).trim();
@@ -56,11 +63,18 @@
 
   function toast(message) {
     const element = $('account-toast');
+
     if (!element) return;
+
     element.textContent = message;
     element.classList.add('show');
+
     clearTimeout(toast.timer);
-    toast.timer = setTimeout(() => element.classList.remove('show'), 2400);
+
+    toast.timer = setTimeout(
+      () => element.classList.remove('show'),
+      2400
+    );
   }
 
   function renderIdentity() {
@@ -68,16 +82,37 @@
     const email = accountUser?.email || '';
     const initial = name.charAt(0).toUpperCase() || 'U';
 
-    if ($('account-avatar')) $('account-avatar').textContent = initial;
-    if ($('account-side-name')) $('account-side-name').textContent = name;
-    if ($('account-side-email')) $('account-side-email').textContent = email;
-    if ($('account-greeting')) $('account-greeting').textContent = `Hola, ${name}`;
-    if ($('account-profile-name')) $('account-profile-name').value = name;
-    if ($('account-profile-email')) $('account-profile-email').value = email;
+    if ($('account-avatar')) {
+      $('account-avatar').textContent = initial;
+    }
+
+    if ($('account-side-name')) {
+      $('account-side-name').textContent = name;
+    }
+
+    if ($('account-side-email')) {
+      $('account-side-email').textContent = email;
+    }
+
+    if ($('account-greeting')) {
+      $('account-greeting').textContent = `Hola, ${name}`;
+    }
+
+    if ($('account-profile-name')) {
+      $('account-profile-name').value = name;
+    }
+
+    if ($('account-profile-email')) {
+      $('account-profile-email').value = email;
+    }
   }
 
   function productList(order) {
-    const products = Array.isArray(order.products) ? order.products : [];
+    const products =
+      Array.isArray(order.products)
+        ? order.products
+        : [];
+
     if (!products.length) {
       return '<li><span>Sin detalle de productos</span></li>';
     }
@@ -85,13 +120,19 @@
     return products.map(product => {
       const quantity = Number(product.quantity || 0);
       const price = Number(product.price || 0);
-      const subtotal = Number(product.subtotal || (price * quantity));
-      const size = String(product.size || '').trim();
+      const subtotal =
+        Number(product.subtotal || (price * quantity));
+
+      const size =
+        String(product.size || '').trim();
+
       return `
         <li>
           <span>
             ${quantity} × ${escapeHtml(product.name || 'Producto')}
-            ${size ? `<small>Talla ${escapeHtml(size)}</small>` : ''}
+            ${size
+              ? `<small>Talla ${escapeHtml(size)}</small>`
+              : ''}
           </span>
           <strong>${money(subtotal)}</strong>
         </li>
@@ -100,9 +141,21 @@
   }
 
   function orderCard(order) {
-    const id = escapeHtml(order.id || 'Sin número');
-    const status = escapeHtml(order.status || 'Pendiente');
-    const cls = statusClass(order.status);
+    const id =
+      escapeHtml(
+        order.id ||
+        order.objectId ||
+        'Sin número'
+      );
+
+    const status =
+      escapeHtml(
+        order.status ||
+        'Pendiente'
+      );
+
+    const cls =
+      statusClass(order.status);
 
     return `
       <article class="account-order-card">
@@ -111,15 +164,47 @@
             <small>Pedido</small>
             <strong>#${id}</strong>
           </div>
-          <span class="account-order-status status-${cls}">${status}</span>
+
+          <span class="account-order-status status-${cls}">
+            ${status}
+          </span>
         </div>
-        <ul class="account-order-products">${productList(order)}</ul>
+
+        <ul class="account-order-products">
+          ${productList(order)}
+        </ul>
+
         <div class="account-order-footer">
           <div>
-            <div>${escapeHtml(formatDate(order.created_at))}</div>
-            <div style="margin-top:4px">Pago: ${escapeHtml(order.payment_method || 'Por acordar')}</div>
-            ${order.address ? `<div style="margin-top:4px">${escapeHtml(order.address)}</div>` : ''}
+            <div>
+              ${escapeHtml(
+                formatDate(
+                  order.created_at ||
+                  order.createdAt
+                )
+              )}
+            </div>
+
+            <div style="margin-top:4px">
+              Pago:
+              ${escapeHtml(
+                order.payment_method ||
+                order.paymentMethod ||
+                'Por acordar'
+              )}
+            </div>
+
+            ${
+              order.address
+                ? `
+                  <div style="margin-top:4px">
+                    ${escapeHtml(order.address)}
+                  </div>
+                `
+                : ''
+            }
           </div>
+
           <div class="account-order-total">
             <span>Total</span>
             <strong>${money(order.total)}</strong>
@@ -130,189 +215,449 @@
   }
 
   function renderOrders() {
-    const list = $('account-orders-list');
+    const list =
+      $('account-orders-list');
+
     if (!list) return;
 
     if (!accountOrders.length) {
       list.innerHTML = `
         <div class="account-empty">
           <h3>Aún no tienes pedidos</h3>
-          <p>Cuando compres con esta cuenta iniciada, tus pedidos aparecerán aquí.</p>
+          <p>
+            Cuando compres con esta cuenta iniciada,
+            tus pedidos aparecerán aquí.
+          </p>
         </div>
       `;
+
       return;
     }
 
-    list.innerHTML = accountOrders.map(orderCard).join('');
+    list.innerHTML =
+      accountOrders.map(orderCard).join('');
   }
 
   function renderLatestOrder() {
-    const container = $('account-latest-order');
+    const container =
+      $('account-latest-order');
+
     if (!container) return;
 
-    const order = accountOrders[0];
+    const order =
+      accountOrders[0];
+
     if (!order) {
       container.innerHTML = `
         <div class="account-empty">
           <h3>Sin compras todavía</h3>
-          <p>Tu pedido más reciente aparecerá aquí.</p>
+          <p>
+            Tu pedido más reciente aparecerá aquí.
+          </p>
         </div>
       `;
+
       return;
     }
 
     container.innerHTML = `
       <div class="account-latest-mini">
-        <div class="account-latest-row"><span>Pedido</span><strong>#${escapeHtml(order.id)}</strong></div>
-        <div class="account-latest-row"><span>Fecha</span><strong>${escapeHtml(formatDate(order.created_at))}</strong></div>
-        <div class="account-latest-row"><span>Estado</span><span class="account-order-status status-${statusClass(order.status)}">${escapeHtml(order.status || 'Pendiente')}</span></div>
-        <div class="account-latest-row"><span>Total</span><strong>${money(order.total)}</strong></div>
+        <div class="account-latest-row">
+          <span>Pedido</span>
+          <strong>
+            #${escapeHtml(
+              order.id ||
+              order.objectId ||
+              'Sin número'
+            )}
+          </strong>
+        </div>
+
+        <div class="account-latest-row">
+          <span>Fecha</span>
+          <strong>
+            ${escapeHtml(
+              formatDate(
+                order.created_at ||
+                order.createdAt
+              )
+            )}
+          </strong>
+        </div>
+
+        <div class="account-latest-row">
+          <span>Estado</span>
+          <span class="account-order-status status-${statusClass(order.status)}">
+            ${escapeHtml(order.status || 'Pendiente')}
+          </span>
+        </div>
+
+        <div class="account-latest-row">
+          <span>Total</span>
+          <strong>${money(order.total)}</strong>
+        </div>
       </div>
     `;
   }
 
   function renderMetrics() {
-    const validOrders = accountOrders.filter(order => order.status !== 'Cancelado');
-    const activeOrders = accountOrders.filter(order => !['Entregado', 'Cancelado'].includes(order.status));
-    const spent = validOrders.reduce((sum, order) => sum + Number(order.total || 0), 0);
+    const validOrders =
+      accountOrders.filter(
+        order =>
+          order.status !== 'Cancelado'
+      );
 
-    if ($('account-orders-count')) $('account-orders-count').textContent = String(accountOrders.length);
-    if ($('account-spent-total')) $('account-spent-total').textContent = money(spent);
-    if ($('account-active-orders')) $('account-active-orders').textContent = String(activeOrders.length);
+    const activeOrders =
+      accountOrders.filter(
+        order =>
+          ![
+            'Entregado',
+            'Cancelado'
+          ].includes(order.status)
+      );
+
+    const spent =
+      validOrders.reduce(
+        (sum, order) =>
+          sum + Number(order.total || 0),
+        0
+      );
+
+    if ($('account-orders-count')) {
+      $('account-orders-count').textContent =
+        String(accountOrders.length);
+    }
+
+    if ($('account-spent-total')) {
+      $('account-spent-total').textContent =
+        money(spent);
+    }
+
+    if ($('account-active-orders')) {
+      $('account-active-orders').textContent =
+        String(activeOrders.length);
+    }
   }
 
   async function loadOrders(showToast = false) {
-    if (!accountUser || !window.urbanSupabase) return;
-    const list = $('account-orders-list');
-    if (list) list.innerHTML = '<div class="account-loading">Cargando pedidos...</div>';
+    if (!accountUser) return;
+
+    const list =
+      $('account-orders-list');
+
+    if (list) {
+      list.innerHTML =
+        '<div class="account-loading">Cargando pedidos...</div>';
+    }
 
     try {
-      const { data, error } = await window.urbanSupabase
-        .from('orders')
-        .select('*')
-        .eq('user_id', accountUser.id)
-        .order('created_at', { ascending: false })
-        .limit(100);
+      const query =
+        Backendless.DataQueryBuilder
+          .create()
+          .setWhereClause(
+            "user_id = '" +
+            String(accountUser.objectId)
+              .replace(/'/g, "''") +
+            "'"
+          )
+          .setSortBy(
+            "created_at DESC"
+          )
+          .setPageSize(100);
 
-      if (error) throw error;
-      accountOrders = data || [];
+      const data =
+        await Backendless.Data
+          .of("orders")
+          .find(query);
+
+      accountOrders =
+        Array.isArray(data)
+          ? data
+          : [];
+
       renderOrders();
       renderLatestOrder();
       renderMetrics();
-      if (showToast) toast('Pedidos actualizados.');
+
+      if (showToast) {
+        toast('Pedidos actualizados.');
+      }
+
     } catch (error) {
-      console.error('Error cargando cuenta:', error);
+      console.error(
+        'Error cargando cuenta:',
+        error
+      );
+
       if (list) {
         list.innerHTML = `
           <div class="account-error">
-            <h3>No pudimos cargar tus pedidos</h3>
-            <p>${escapeHtml(error?.message || 'Intenta nuevamente.')}</p>
+            <h3>
+              No pudimos cargar tus pedidos
+            </h3>
+
+            <p>
+              ${escapeHtml(
+                error?.message ||
+                'Intenta nuevamente.'
+              )}
+            </p>
           </div>
         `;
       }
-      const latest = $('account-latest-order');
-      if (latest) latest.innerHTML = '<div class="account-error">No se pudo cargar tu pedido reciente.</div>';
+
+      const latest =
+        $('account-latest-order');
+
+      if (latest) {
+        latest.innerHTML =
+          '<div class="account-error">No se pudo cargar tu pedido reciente.</div>';
+      }
     }
   }
 
   function showSection(sectionName) {
-    const valid = ['overview', 'orders', 'profile'];
-    const target = valid.includes(sectionName) ? sectionName : 'overview';
+    const valid = [
+      'overview',
+      'orders',
+      'profile'
+    ];
 
-    document.querySelectorAll('.account-section').forEach(section => {
-      section.classList.toggle('account-section-active', section.id === target);
+    const target =
+      valid.includes(sectionName)
+        ? sectionName
+        : 'overview';
+
+    document
+      .querySelectorAll('.account-section')
+      .forEach(section => {
+        section.classList.toggle(
+          'account-section-active',
+          section.id === target
+        );
+      });
+
+    document
+      .querySelectorAll('.account-nav-link')
+      .forEach(link => {
+        link.classList.toggle(
+          'active',
+          link.dataset.accountSection === target
+        );
+      });
+
+    if (
+      location.hash !== `#${target}`
+    ) {
+      history.replaceState(
+        null,
+        '',
+        `#${target}`
+      );
+    }
+
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
     });
-
-    document.querySelectorAll('.account-nav-link').forEach(link => {
-      link.classList.toggle('active', link.dataset.accountSection === target);
-    });
-
-    if (location.hash !== `#${target}`) history.replaceState(null, '', `#${target}`);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   async function saveProfile(event) {
     event.preventDefault();
-    const button = $('account-profile-save');
-    const status = $('account-profile-status');
-    const name = String($('account-profile-name')?.value || '').trim();
+
+    const button =
+      $('account-profile-save');
+
+    const status =
+      $('account-profile-status');
+
+    const name =
+      String(
+        $('account-profile-name')?.value ||
+        ''
+      ).trim();
 
     if (name.length < 2) {
-      if (status) status.textContent = 'Escribe un nombre válido.';
+      if (status) {
+        status.textContent =
+          'Escribe un nombre válido.';
+      }
+
       return;
     }
 
     if (button) {
       button.disabled = true;
-      button.textContent = 'GUARDANDO...';
+      button.textContent =
+        'GUARDANDO...';
     }
-    if (status) status.textContent = '';
+
+    if (status) {
+      status.textContent = '';
+    }
 
     try {
-      const { data, error } = await window.urbanSupabase.auth.updateUser({
-        data: { name }
-      });
-      if (error) throw error;
-      accountUser = data.user || accountUser;
+      accountUser.name = name;
+
+      const updatedUser =
+        await Backendless.UserService.update(
+          accountUser
+        );
+
+      accountUser =
+        updatedUser ||
+        accountUser;
+
       renderIdentity();
-      if (status) status.textContent = 'Perfil actualizado.';
+
+      if (status) {
+        status.textContent =
+          'Perfil actualizado.';
+      }
+
       toast('Perfil actualizado.');
+
     } catch (error) {
-      console.error('Error actualizando perfil:', error);
-      if (status) status.textContent = error?.message || 'No se pudo actualizar el perfil.';
+      console.error(
+        'Error actualizando perfil:',
+        error
+      );
+
+      if (status) {
+        status.textContent =
+          error?.message ||
+          'No se pudo actualizar el perfil.';
+      }
+
     } finally {
       if (button) {
         button.disabled = false;
-        button.textContent = 'GUARDAR CAMBIOS';
+        button.textContent =
+          'GUARDAR CAMBIOS';
       }
     }
   }
 
   async function logout() {
     try {
-      await window.urbanSupabase?.auth?.signOut();
+      await Backendless.UserService.logout();
+    } catch (error) {
+      console.warn(
+        'No se pudo cerrar la sesión:',
+        error
+      );
     } finally {
-      location.href = 'UrbanSociety.html';
+      location.href =
+        'UrbanSociety.html';
     }
   }
 
   async function initAccount() {
-    if (!window.urbanSupabase) {
-      location.replace('UrbanSociety.html');
-      return;
+    try {
+      if (
+        typeof iniciarBackendless !==
+        'function'
+      ) {
+        location.replace(
+          'UrbanSociety.html'
+        );
+
+        return;
+      }
+
+      if (!iniciarBackendless()) {
+        location.replace(
+          'UrbanSociety.html'
+        );
+
+        return;
+      }
+
+      const user =
+        await Backendless.UserService
+          .getCurrentUser();
+
+      if (!user) {
+        location.replace(
+          'UrbanSociety.html?login=1'
+        );
+
+        return;
+      }
+
+      accountUser = user;
+
+      renderIdentity();
+
+      await loadOrders();
+
+      document
+        .querySelectorAll('.account-nav-link')
+        .forEach(link => {
+          link.addEventListener(
+            'click',
+            event => {
+              event.preventDefault();
+
+              showSection(
+                link.dataset.accountSection
+              );
+            }
+          );
+        });
+
+      const profileForm =
+        $('account-profile-form');
+
+      if (profileForm) {
+        profileForm.addEventListener(
+          'submit',
+          saveProfile
+        );
+      }
+
+      const logoutButton =
+        $('account-logout');
+
+      if (logoutButton) {
+        logoutButton.addEventListener(
+          'click',
+          logout
+        );
+      }
+
+      const refreshButton =
+        $('account-refresh-orders');
+
+      if (refreshButton) {
+        refreshButton.addEventListener(
+          'click',
+          () => loadOrders(true)
+        );
+      }
+
+      const initialSection =
+        location.hash
+          ? location.hash.substring(1)
+          : 'overview';
+
+      showSection(initialSection);
+
+    } catch (error) {
+      console.error(
+        'Error inicializando cuenta:',
+        error
+      );
+
+      location.replace(
+        'UrbanSociety.html'
+      );
     }
-
-    const { data, error } = await window.urbanSupabase.auth.getUser();
-    if (error || !data?.user) {
-      location.replace('UrbanSociety.html?login=1');
-      return;
-    }
-
-    accountUser = data.user;
-    renderIdentity();
-    await loadOrders();
-
-    document.querySelectorAll('.account-nav-link').forEach(link => {
-      link.addEventListener('click', event => {
-        event.preventDefault();
-        showSection(link.dataset.accountSection);
-      });
-    });
-
-    document.querySelectorAll('[data-go-orders]').forEach(link => {
-      link.addEventListener('click', event => {
-        event.preventDefault();
-        showSection('orders');
-      });
-    });
-
-    $('account-refresh-orders')?.addEventListener('click', () => loadOrders(true));
-    $('account-profile-form')?.addEventListener('submit', saveProfile);
-    $('account-logout')?.addEventListener('click', logout);
-    window.addEventListener('hashchange', () => showSection(location.hash.slice(1)));
-
-    showSection(location.hash.slice(1) || 'overview');
   }
 
-  document.addEventListener('DOMContentLoaded', initAccount);
+  document.addEventListener(
+    'DOMContentLoaded',
+    initAccount
+  );
+
 })();

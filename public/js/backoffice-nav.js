@@ -63,7 +63,7 @@
   }
 
   async function logoutBackoffice() {
-    try { await window.urbanSupabase?.auth?.signOut(); } catch (_) {}
+    try { await cerrarSesionBackendless(); } catch (_) {}
     location.href = 'UrbanSociety.html';
   }
 

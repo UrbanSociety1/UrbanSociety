@@ -34,11 +34,45 @@ function instalarCamposAvanzadosProducto(){
   }
 }
 
-async function cargarProductosAdmin(){
-  const container=adminEl("admin-products");if(container)container.innerHTML='<div class="empty-products">Cargando productos...</div>';
-  try{const query=Backendless.DataQueryBuilder.create().setSortBy(["created DESC"]);adminProducts=await Backendless.Data.of(ADMIN_PRODUCTS_TABLE).find(query)||[];mostrarProductosAdmin(adminProducts);actualizarEstadisticasAdmin();}
-  catch(error){console.error("Error cargando productos:",error);if(container)container.innerHTML='<div class="empty-products">No se pudieron cargar los productos.</div>';}
+async function cargarProductosAdmin() {
+  const container = adminEl("admin-products");
+
+  if (container) {
+    container.innerHTML =
+      '<div class="empty-products">Cargando productos...</div>';
+  }
+
+  try {
+    const response = await fetch(`${window.API_URL}/api/products`);
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    adminProducts = Array.isArray(data.products)
+      ? data.products
+      : [];
+
+      adminProducts = adminProducts.map(producto => ({
+  ...producto,
+  objectId: producto.id
+}));
+
+    mostrarProductosAdmin(adminProducts);
+    actualizarEstadisticasAdmin();
+
+  } catch (error) {
+    console.error("Error cargando productos:", error);
+
+    if (container) {
+      container.innerHTML =
+        '<div class="empty-products">No se pudieron cargar los productos.</div>';
+    }
+  }
 }
+
 function mostrarProductosAdmin(productos){const container=adminEl("admin-products");if(!container)return;if(!productos.length){container.innerHTML='<div class="empty-products"><h3>No hay productos</h3><p>Agrega tu primer producto.</p></div>';return;}container.innerHTML=productos.map(tarjetaProductoAdmin).join("");}
 function tarjetaProductoAdmin(producto){
   const id=escaparAdmin(producto.objectId||""),nombre=escaparAdmin(producto.name||"Sin nombre"),categoria=escaparAdmin(producto.category||"General"),precio=Number(producto.price||0),stock=Number(producto.stock||0),imagen=escaparAdmin(producto.image||producto.imageUrl||"images/Logo Urban.png"),tallas=normalizarTallasAdmin(producto.sizes),activo=producto.active!==false,sku=escaparAdmin(producto.sku||""),barcode=escaparAdmin(producto.barcode||"");
@@ -46,7 +80,7 @@ function tarjetaProductoAdmin(producto){
 }
 
 function mostrarVistaPrevia(event){const archivo=event.target.files?.[0],preview=adminEl("image-preview"),container=adminEl("image-preview-container"),status=adminEl("image-upload-status");if(!archivo){if(container)container.style.display="none";return;}if(!archivo.type.startsWith("image/")){alert("Selecciona una imagen válida.");event.target.value="";return;}if(archivo.size>5*1024*1024){alert("La imagen no puede superar 5 MB.");event.target.value="";return;}const reader=new FileReader();reader.onload=()=>{if(preview)preview.src=reader.result;if(container)container.style.display="block";};reader.readAsDataURL(archivo);if(status)status.textContent=archivo.name;}
-async function subirImagenProducto(){const input=adminEl("product-image-file"),archivo=input?.files?.[0];if(!archivo)return null;const status=adminEl("image-upload-status");if(status)status.textContent="Subiendo fotografía...";const nombreSeguro=archivo.name.replace(/[^a-zA-Z0-9._-]/g,"_"),ruta=`products/${Date.now()}_${nombreSeguro}`;try{const resultado=await Backendless.Files.upload(archivo,ruta,true),url=resultado?.fileURL||resultado?.url;if(!url)throw new Error("Supabase no devolvió la URL de la imagen.");if(status)status.textContent="✓ Fotografía subida correctamente.";return url;}catch(error){if(status)status.textContent="Error al subir la fotografía.";throw error;}}
+async function subirImagenProducto(){const input=adminEl("product-image-file"),archivo=input?.files?.[0];if(!archivo)return null;const status=adminEl("image-upload-status");if(status)status.textContent="Subiendo fotografía...";const nombreSeguro=archivo.name.replace(/[^a-zA-Z0-9._-]/g,"_"),ruta=`products/${Date.now()}_${nombreSeguro}`;try{const resultado=await Backendless.Files.upload(archivo,ruta,true),url=resultado?.fileURL||resultado?.url;if(!url)throw new Error("Backendless no devolvió la URL de la imagen.");if(status)status.textContent="✓ Fotografía subida correctamente.";return url;}catch(error){if(status)status.textContent="Error al subir la fotografía.";throw error;}}
 function limpiarCamposVisualesProducto(){["product-id","product-image","product-sizes","product-sku","product-barcode"].forEach(id=>{if(adminEl(id))adminEl(id).value="";});if(adminEl("product-active"))adminEl("product-active").checked=true;const pc=adminEl("image-preview-container");if(pc)pc.style.display="none";const p=adminEl("image-preview");if(p)p.removeAttribute("src");const status=adminEl("image-upload-status");if(status)status.textContent="Selecciona una fotografía desde tu computadora.";const submit=adminEl("product-form")?.querySelector("button[type='submit']");if(submit)submit.textContent="Agregar producto";}
 function limpiarFormularioProducto(){const form=adminEl("product-form");if(form)form.reset();limpiarCamposVisualesProducto();}
 
@@ -66,7 +100,33 @@ async function cargarPedidosAdmin(){const container=adminEl("admin-orders");if(c
 function mostrarPedidosAdmin(pedidos){const container=adminEl("admin-orders");if(!container)return;if(!pedidos.length){container.innerHTML='<div class="empty-products"><h3>No hay pedidos</h3><p>Los nuevos pedidos aparecerán aquí.</p></div>';return;}container.innerHTML=pedidos.map(tarjetaPedidoAdmin).join("");}
 function parsearProductosAdmin(value){if(Array.isArray(value))return value;try{const parsed=JSON.parse(value||"[]");return Array.isArray(parsed)?parsed:[];}catch(_){return[];}}
 function tarjetaPedidoAdmin(pedido){const id=escaparAdmin(pedido.objectId||""),nombre=escaparAdmin(pedido.customerName||"Cliente"),email=escaparAdmin(pedido.customerEmail||""),telefono=escaparAdmin(pedido.customerPhone||""),direccion=escaparAdmin(pedido.address||""),metodo=escaparAdmin(pedido.paymentMethod||"No especificado"),estado=String(pedido.status||"Pendiente"),total=Number(pedido.total||0),fecha=formatearFechaAdmin(pedido.created),estados=["Pendiente","Confirmado","Preparando","Enviado","Entregado","Cancelado"],productos=parsearProductosAdmin(pedido.products);const productosHtml=productos.length?`<ul class="admin-order-products">${productos.map(producto=>{const cantidad=Number(producto.quantity||0),precio=Number(producto.price||0),subtotal=Number(producto.subtotal||precio*cantidad),talla=String(producto.size||"").trim(),sku=String(producto.sku||"").trim();return `<li><div class="admin-order-product-main"><strong>${cantidad} × ${escaparAdmin(producto.name||"Producto")}</strong>${talla?`<small>Talla: ${escaparAdmin(talla)}</small>`:""}${sku?`<small>SKU: ${escaparAdmin(sku)}</small>`:""}</div><strong>${formatearAdminPrecio(subtotal)}</strong></li>`;}).join("")}</ul>`:"";return `<div class="admin-order-card"><div class="admin-order-header"><div><strong>Pedido #${id}</strong>${fecha?`<p class="admin-order-date">${escaparAdmin(fecha)}</p>`:""}</div><span class="order-status">${escaparAdmin(estado)}</span></div><div class="admin-order-body"><p><b>Cliente:</b> ${nombre}</p><p><b>Email:</b> ${email}</p><p><b>Teléfono:</b> ${telefono}</p><p><b>Dirección:</b> ${direccion}</p><p><b>Pago:</b> ${metodo}</p>${productosHtml}<p><b>Total:</b> ${formatearAdminPrecio(total)}</p><label>Estado del pedido</label><select onchange="cambiarEstadoPedido('${id}',this.value)">${estados.map(item=>`<option value="${item}" ${item===estado?"selected":""}>${item}</option>`).join("")}</select></div></div>`;}
-async function cambiarEstadoPedido(id,estado){try{if(!window.urbanSupabase)throw new Error("Supabase no está disponible.");const{data,error}=await window.urbanSupabase.rpc('update_order_status',{p_order_id:id,p_status:estado});if(error)throw error;let mensaje="Estado actualizado.";if(Number(data?.stockRestoreSkipped||0)>0)mensaje+=" El producto ya no existía, por lo que no había stock que restaurar.";mostrarNotificacionAdmin(mensaje);await cargarPedidosAdmin();window.refreshUrbanAlerts?.();}catch(error){console.error(error);alert("No se pudo actualizar el pedido.\n\n"+(error.message||"Error desconocido."));await cargarPedidosAdmin();}}
+async function cambiarEstadoPedido(id,estado){
+  try{
+    if(!id) throw new Error("El pedido no tiene un identificador válido.");
+    if(!estado) throw new Error("El estado del pedido no es válido.");
+
+    const pedido=adminOrders.find(item=>String(item.objectId||"")===String(id));
+
+    if(!pedido) throw new Error("No se encontró el pedido.");
+
+    pedido.status=estado;
+
+    await Backendless.Data.of(ADMIN_ORDERS_TABLE).save({
+      objectId:id,
+      status:estado
+    });
+
+    mostrarNotificacionAdmin("Estado actualizado correctamente.");
+    await cargarPedidosAdmin();
+    window.refreshUrbanAlerts?.();
+
+  }catch(error){
+    console.error("Error actualizando estado del pedido:",error);
+    alert("No se pudo actualizar el pedido.\\n\\n"+(error.message||"Error desconocido."));
+    await cargarPedidosAdmin();
+  }
+}
+
 function actualizarEstadisticasAdmin(){const pc=adminEl("admin-products-count"),oc=adminEl("admin-orders-count"),vt=adminEl("admin-sales-total");if(pc)pc.textContent=adminProducts.length;if(oc)oc.textContent=adminOrders.length;if(vt)vt.textContent=formatearAdminPrecio(adminOrders.reduce((s,p)=>p.status==="Cancelado"?s:s+Number(p.total||0),0));}
 
 async function initAdminPage(){
