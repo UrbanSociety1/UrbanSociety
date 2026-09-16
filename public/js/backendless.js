@@ -1,4 +1,3 @@
-```javascript
 /* =========================================================
    URBAN SOCIETY
    BACKENDLESS REAL BACKEND
@@ -14,10 +13,13 @@
    - Backendless File Service
 
    Además mantiene una pequeña capa de compatibilidad
-   con el código antiguo de Urban Society.
-========================================================= */
 
-(function () {
+
+
+
+    con el código antiguo de Urban Society.
+  ========================================================= */
+
 
   "use strict";
 
@@ -299,7 +301,7 @@
       userId:
         row.userId ||
         row.ownerId ||
-        null
+        null,
 
     };
   }
@@ -338,6 +340,14 @@
 
     return tableName;
   }
+
+  async function verificarOwner() {
+    const usuario = await obtenerUsuarioActual();
+
+    if (!usuario) {
+      alert("Debes iniciar sesión para acceder a esta sección.");
+      return false;
+    }
 
   const email = String(usuario.email || "").trim().toLowerCase();
   const ownerEmail = String(
