@@ -1,5 +1,15 @@
 export default {
   async fetch(request, env) {
+    const corsHeaders = {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type"
+    };
+
+    if (request.method === "OPTIONS") {
+      return new Response(null, { headers: corsHeaders });
+    }
+
     const url = new URL(request.url);
 
     // ==========================================
@@ -59,7 +69,7 @@ export default {
         return Response.json({
           success: true,
           products: result.results || []
-        });
+        }, { headers: corsHeaders });
       } catch (error) {
         return Response.json(
           {

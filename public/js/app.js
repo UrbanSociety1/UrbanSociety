@@ -36,11 +36,12 @@ async function cargarProductos() {
   `;
 
   try {
-    const query = Backendless.DataQueryBuilder
-      .create()
-      .setSortBy(["created DESC"]);
+    const respuesta = await fetch(`${window.API_URL}/api/products`);
+    if (!respuesta.ok) throw new Error(`HTTP ${respuesta.status}`);
+    const data = await respuesta.json();
+    if (!data.success) throw new Error(data.error || "Error cargando productos");
 
-    const encontrados = await Backendless.Data.of(PRODUCTS_TABLE).find(query) || [];
+    const encontrados = data.products || [];
 
     // Incluso la cuenta propietaria ve el escaparate como lo vería un cliente.
     productosUrban = encontrados.filter(producto => producto.active !== false);
@@ -86,7 +87,7 @@ function mostrarProductos(productos, filtrando = false) {
 }
 
 function crearTarjetaProducto(producto) {
-  const id = escaparHTML(producto.objectId || "");
+  const id = escaparHTML(producto.id || "");
   const nombre = escaparHTML(producto.name || "Producto");
   const categoria = escaparHTML(producto.category || "General");
   const descripcion = escaparHTML(producto.description || "Producto Urban Society.");
@@ -153,7 +154,7 @@ function crearTarjetaProducto(producto) {
 }
 
 function abrirProducto(id) {
-  const producto = productosUrban.find(item => item.objectId === id && item.active !== false);
+  const producto = productosUrban.find(item => item.objectid === id && item.active !== false);
   if (!producto) return;
 
   const modal = document.getElementById("product-modal");
@@ -222,7 +223,7 @@ function abrirProducto(id) {
         return;
       }
 
-      agregarAlCarrito(producto.objectId, talla);
+      agregarAlCarrito(producto.id, talla);
       cerrarModalProducto();
     };
   }
@@ -262,7 +263,7 @@ function sincronizarCarritoConCatalogo() {
     if (!item || typeof item !== "object") return;
 
     const id = String(item.id || "").trim();
-    const producto = productosUrban.find(p => p.objectId === id && p.active !== false);
+    const producto = productosUrban.find(p => p.objectid === id && p.active !== false);
     if (!producto) return;
 
     const stock = Math.max(0, Math.trunc(Number(producto.stock || 0)));
@@ -292,7 +293,7 @@ function sincronizarCarritoConCatalogo() {
 }
 
 function agregarAlCarrito(id, talla = "") {
-  const producto = productosUrban.find(item => item.objectId === id && item.active !== false);
+  const producto = productosUrban.find(item => item.objectid === id && item.active !== false);
 
   if (!producto) {
     mostrarNotificacion("Producto no disponible.");
@@ -339,7 +340,7 @@ function agregarAlCarrito(id, talla = "") {
 
 function cambiarCantidad(id, tallaCodificada, cantidad) {
   const talla = decodeURIComponent(String(tallaCodificada || ""));
-  const producto = productosUrban.find(item => item.objectId === id);
+  const producto = productosUrban.find(item => item.objectid === id);
   const item = carritoUrban.find(item =>
     item.id === id && String(item.size || "") === talla
   );
@@ -418,7 +419,7 @@ function mostrarCarrito() {
   let total = 0;
 
   container.innerHTML = carritoUrban.map(item => {
-    const producto = productosUrban.find(p => p.objectId === item.id);
+    const producto = productosUrban.find(p => p.id === item.id);
     if (!producto) return "";
 
     const precio = Number(producto.price || 0);
@@ -466,7 +467,7 @@ function mostrarCarrito() {
 
 function obtenerTotalCarrito() {
   return carritoUrban.reduce((total, item) => {
-    const producto = productosUrban.find(p => p.objectId === item.id);
+    const producto = productosUrban.find(p => p.objectid === item.id);
     if (!producto) return total;
 
     return total +

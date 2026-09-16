@@ -143,11 +143,6 @@ function irAlPanelAdmin() {
 async function registrarUsuario(event) {
   event.preventDefault();
 
-  if (typeof Backendless === "undefined" || !iniciarBackendless()) {
-    mostrarMensajeAuth("Backendless no está disponible.", "error", "register-status");
-    return;
-  }
-
   const nombre = obtenerElemento("register-name")?.value.trim();
   const email = obtenerElemento("register-email")?.value.trim();
   const password = obtenerElemento("register-password")?.value || "";
@@ -159,43 +154,66 @@ async function registrarUsuario(event) {
   }
 
   if (password.length < 6) {
-    mostrarMensajeAuth("La contraseña debe tener al menos 6 caracteres.", "error", "register-status");
+    mostrarMensajeAuth(
+      "La contraseña debe tener al menos 6 caracteres.",
+      "error",
+      "register-status"
+    );
     return;
   }
 
   if (password !== confirmPassword) {
-    mostrarMensajeAuth("Las contraseñas no coinciden.", "error", "register-status");
+    mostrarMensajeAuth(
+      "Las contraseñas no coinciden.",
+      "error",
+      "register-status"
+    );
     return;
   }
 
   mostrarMensajeAuth("Creando cuenta...", "success", "register-status");
 
   try {
-    const user = new Backendless.User();
-    user.name = nombre;
-    user.email = email;
-    user.password = password;
+    const respuesta = await fetch(`${window.API_URL}/api/auth/register`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        name: nombre,
+        email,
+        password
+      })
+    });
 
-    await Backendless.UserService.register(user);
+    const data = await respuesta.json();
 
-    const formulario = obtenerElemento("register-form");
-    if (formulario) formulario.reset();
+    if (!respuesta.ok || !data.success) {
+      throw new Error(data.error || "No se pudo crear la cuenta.");
+    }
 
-    mostrarMensajeAuth("Cuenta creada. Ya puedes iniciar sesión.", "success", "register-status");
+    obtenerElemento("register-form")?.reset();
+
+    mostrarMensajeAuth(
+      "Cuenta creada. Ya puedes iniciar sesión.",
+      "success",
+      "register-status"
+    );
+
     setTimeout(mostrarLogin, 900);
+
   } catch (error) {
     console.error("Error registrando usuario:", error);
-    mostrarMensajeAuth(obtenerMensajeError(error, "No se pudo crear la cuenta."), "error", "register-status");
+    mostrarMensajeAuth(
+      error.message || "No se pudo crear la cuenta.",
+      "error",
+      "register-status"
+    );
   }
 }
 
 async function iniciarSesion(event) {
   event.preventDefault();
-
-  if (typeof Backendless === "undefined" || !iniciarBackendless()) {
-    mostrarMensajeAuth("Backendless no está disponible.");
-    return;
-  }
 
   const email = obtenerElemento("login-email")?.value.trim();
   const password = obtenerElemento("login-password")?.value || "";
@@ -208,37 +226,71 @@ async function iniciarSesion(event) {
   mostrarMensajeAuth("Iniciando sesión...", "success");
 
   try {
-    usuarioActual = await Backendless.UserService.login(email, password, true);
+    const respuesta = await fetch(`${window.API_URL}/api/auth/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        email,
+        password
+      })
+    });
+
+    const data = await respuesta.json();
+
+    if (!respuesta.ok || !data.success) {
+      throw new Error(data.error || "Correo o contraseña incorrectos.");
+    }
+
+    usuarioActual = data.user;
+
+    localStorage.setItem("urban_user", JSON.stringify(usuarioActual));
+    localStorage.setItem("urban_token", data.token);
+
     detectarPropietario(usuarioActual);
     actualizarAreaUsuario();
 
-    const formulario = obtenerElemento("login-form");
-    if (formulario) formulario.reset();
+    obtenerElemento("login-form")?.reset();
 
     mostrarMensajeAuth("Sesión iniciada correctamente.", "success");
     setTimeout(mostrarTienda, 450);
+
   } catch (error) {
     console.error("Error iniciando sesión:", error);
-    mostrarMensajeAuth(obtenerMensajeError(error, "Correo o contraseña incorrectos."));
+    mostrarMensajeAuth(
+      error.message || "Correo o contraseña incorrectos."
+    );
   }
 }
 
 async function cerrarSesion() {
-  try {
-    await cerrarSesionBackendless();
-  } finally {
-    usuarioActual = null;
-    usuarioEsOwner = false;
-    obtenerElemento("account-menu")?.remove();
-    actualizarAreaUsuario();
-    mostrarTienda();
-  }
+  localStorage.removeItem("urban_user");
+  localStorage.removeItem("urban_token");
+
+  usuarioActual = null;
+  usuarioEsOwner = false;
+
+  obtenerElemento("account-menu")?.remove();
+  actualizarAreaUsuario();
+  mostrarTienda();
 }
 
 async function cargarSesionExistente() {
-  usuarioActual = await obtenerUsuarioActual();
-  detectarPropietario(usuarioActual);
-  actualizarAreaUsuario();
+  try {
+    const guardado = localStorage.getItem("urban_user");
+
+    usuarioActual = guardado ? JSON.parse(guardado) : null;
+
+    detectarPropietario(usuarioActual);
+    actualizarAreaUsuario();
+
+  } catch (error) {
+    console.error("Error cargando sesión:", error);
+    localStorage.removeItem("urban_user");
+    localStorage.removeItem("urban_token");
+    usuarioActual = null;
+  }
 }
 
 function obtenerMensajeError(error, mensajeDefault) {
