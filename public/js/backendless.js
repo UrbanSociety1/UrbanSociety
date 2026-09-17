@@ -1,4 +1,4 @@
-﻿/* =========================================================
+/* =========================================================
    URBAN SOCIETY
    BACKENDLESS REAL BACKEND
    =========================================================
@@ -556,7 +556,16 @@ function prepararInterfaz() {
   });
 }
 
-cargarEstilosMejorados();
+function cargarEstilosMejorados() {
+  const estilos = ["css/upgrade.css", "css/contact-form.css"];
+  estilos.forEach(href => {
+    if (document.querySelector(`link[href="${href}"]`)) return;
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = href;
+    document.head.appendChild(link);
+  });
+}cargarEstilosMejorados();
 iniciarBackendless();
 document.addEventListener("DOMContentLoaded", prepararInterfaz);
 
