@@ -1,9 +1,9 @@
-/* =========================================================
+﻿/* =========================================================
    URBAN SOCIETY
    BACKENDLESS REAL BACKEND
    =========================================================
 
-   Esta versión NO utiliza Supabase.
+   Esta versiÃ³n NO utiliza Supabase.
 
    Utiliza directamente:
 
@@ -12,12 +12,12 @@
    - Backendless Data Service
    - Backendless File Service
 
-   Además mantiene una pequeña capa de compatibilidad
+   AdemÃ¡s mantiene una pequeÃ±a capa de compatibilidad
 
 
 
 
-    con el código antiguo de Urban Society.
+    con el cÃ³digo antiguo de Urban Society.
   ========================================================= */
 
 
@@ -28,14 +28,7 @@
      EVITAR CARGAR EL BACKEND DOS VECES
   ======================================================= */
 
-  if (window.__urbanBackendlessInstalled) {
-
-    console.warn(
-      "Urban Society: Backendless ya estaba instalado."
-    );
-
-    return;
-  }
+  if (window.__urbanBackendlessInstalled) { console.warn("Urban Society: Backendless ya estaba instalado."); } else { window.__urbanBackendlessInstalled = true; }
 
   window.__urbanBackendlessInstalled = true;
 
@@ -44,20 +37,11 @@
      COMPROBAR SDK
   ======================================================= */
 
-  if (
-    typeof window.Backendless === "undefined"
-  ) {
-
-    console.error(
-      "ERROR: El SDK de Backendless no está cargado."
-    );
-
-    return;
-  }
+  if (typeof window.Backendless === "undefined") { console.error("ERROR: El SDK de Backendless no estÃ¡ cargado."); }
 
 
   /* =======================================================
-     COMPROBAR CONFIGURACIÓN
+     COMPROBAR CONFIGURACIÃ“N
   ======================================================= */
 
   if (
@@ -65,15 +49,14 @@
   ) {
 
     console.error(
-      "ERROR: BACKENDLESS_CONFIG no está definido."
+      "ERROR: BACKENDLESS_CONFIG no estÃ¡ definido."
     );
 
-    return;
   }
 
 
   /* =======================================================
-     CONFIGURACIÓN
+     CONFIGURACIÃ“N
   ======================================================= */
 
   const CONFIG = window.BACKENDLESS_CONFIG;
@@ -105,7 +88,7 @@
       error
     );
 
-    return;
+    
   }
 
 
@@ -345,7 +328,7 @@
     const usuario = await obtenerUsuarioActual();
 
     if (!usuario) {
-      alert("Debes iniciar sesión para acceder a esta sección.");
+      alert("Debes iniciar sesiÃ³n para acceder a esta secciÃ³n.");
       return false;
     }
 
@@ -355,7 +338,7 @@
   ).trim().toLowerCase();
 
   if (!ownerEmail || email !== ownerEmail) {
-    alert("Acceso denegado. Esta sección es únicamente para el propietario.");
+    alert("Acceso denegado. Esta secciÃ³n es Ãºnicamente para el propietario.");
     window.location.replace("UrbanSociety.html");
     return false;
   }
@@ -370,7 +353,7 @@ async function cerrarSesionBackendless() {
     await Backendless.UserService.logout();
     return true;
   } catch (error) {
-    console.error("No se pudo cerrar la sesión:", error);
+    console.error("No se pudo cerrar la sesiÃ³n:", error);
     return false;
   }
 }
@@ -386,7 +369,7 @@ function actualizarCategoriasUI() {
       .filter(Boolean)
   )].sort((a, b) => a.localeCompare(b, "es"));
 
-  select.innerHTML = '<option value="">Todas las categorías</option>' +
+  select.innerHTML = '<option value="">Todas las categorÃ­as</option>' +
     categorias.map(categoria => {
       const segura = typeof escaparHTML === "function"
         ? escaparHTML(categoria)
@@ -408,8 +391,8 @@ function crearFormularioContacto() {
     <div class="contact-copy">
       <div class="contact-copy-content">
         <p class="eyebrow">MENSAJE DIRECTO</p>
-        <h3>¿Tienes una pregunta?</h3>
-        <p class="muted">Escríbenos sobre disponibilidad, productos o pedidos.</p>
+        <h3>Â¿Tienes una pregunta?</h3>
+        <p class="muted">EscrÃ­benos sobre disponibilidad, productos o pedidos.</p>
       </div>
     </div>
 
@@ -425,7 +408,7 @@ function crearFormularioContacto() {
       </div>
 
       <div class="contact-field full">
-        <label for="contact-phone">WhatsApp / teléfono</label>
+        <label for="contact-phone">WhatsApp / telÃ©fono</label>
         <input id="contact-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" maxlength="25">
       </div>
 
@@ -458,7 +441,6 @@ async function enviarFormularioContacto(event) {
 
   if (!form.checkValidity()) {
     form.reportValidity();
-    return;
   }
 
   if (!endpoint || !/^https:\/\/formspree\.io\/f\//i.test(endpoint)) {
@@ -466,7 +448,6 @@ async function enviarFormularioContacto(event) {
       status.textContent = "Falta conectar el endpoint de Formspree.";
       status.className = "contact-status error";
     }
-    return;
   }
 
   const textoOriginal = button ? button.textContent : "";
@@ -491,13 +472,13 @@ async function enviarFormularioContacto(event) {
     });
 
     if (!respuesta.ok) {
-      throw new Error("Formspree rechazó el envío.");
+      throw new Error("Formspree rechazÃ³ el envÃ­o.");
     }
 
     form.reset();
 
     if (status) {
-      status.textContent = "✓ Mensaje enviado correctamente. Te responderemos pronto.";
+      status.textContent = "âœ“ Mensaje enviado correctamente. Te responderemos pronto.";
       status.className = "contact-status success";
     }
   } catch (error) {
@@ -537,14 +518,14 @@ function prepararInterfaz() {
     menuButton.addEventListener("click", () => {
       const abierto = nav.classList.toggle("open");
       menuButton.setAttribute("aria-expanded", String(abierto));
-      menuButton.textContent = abierto ? "×" : "☰";
+      menuButton.textContent = abierto ? "Ã—" : "â˜°";
     });
 
     nav.querySelectorAll("a").forEach(link => {
       link.addEventListener("click", () => {
         nav.classList.remove("open");
         menuButton.setAttribute("aria-expanded", "false");
-        menuButton.textContent = "☰";
+        menuButton.textContent = "â˜°";
       });
     });
   }
